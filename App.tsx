@@ -43,14 +43,14 @@ import {
   Announcement, 
   ClubType, 
   LevelCategory 
-} from './types';
+} from './types.ts';
 import { 
   DEPARTMENTS, 
   ROOMS, 
   SCHOOL_LOGO, 
   ADMIN_PASSWORD, 
   INITIAL_ANNOUNCEMENTS 
-} from './constants';
+} from './constants.ts';
 
 // Backend Configuration
 const API_URL = 'https://script.google.com/macros/s/AKfycbxrlOoiigf2r4uk_bUQaqu2AOun_fgPf5esKzFLf-jQG6O2T4m8jkFL01MDcc8W9Y1q/exec';
