@@ -400,118 +400,151 @@ const App: React.FC = () => {
       pending: clubStudents.filter(s => s.grade === null).length
     };
 
+    // Pagination logic: 25 students per page
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(clubStudents.length / pageSize));
+    const pages = Array.from({ length: pageCount }, (_, i) => clubStudents.slice(i * pageSize, (i + 1) * pageSize));
+
     return (
-      <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 print:p-0 print:bg-white overflow-y-auto no-print-backdrop">
-        <div className="bg-white w-full max-w-4xl min-h-screen md:min-h-0 md:rounded-3xl shadow-2xl flex flex-col print:shadow-none print:rounded-none">
-          <div className="flex-1 p-12 bg-white print:p-0 print:m-0" id="print-content">
-            <div className="text-center mb-10 print:mt-4">
-              <img src={SCHOOL_LOGO} alt="School Logo" className="h-28 mx-auto mb-6" />
-              <h1 className="text-2xl font-bold text-black mb-2 leading-tight text-center">บัญชีรายชื่อนักเรียนและผลการประเมินกิจกรรมชุมนุม</h1>
-              <h2 className="text-xl font-bold text-gray-800 text-center">ชื่อชุมนุม: {club.name} ({club.type})</h2>
-              <div className="mt-4 flex flex-col items-center gap-1.5 text-gray-700 font-medium">
-                <p className="text-lg">โรงเรียนหนองบัวแดงวิทยา</p>
-                <p>ครูที่ปรึกษาหลัก: <strong>{advisor?.name || club.advisorId}</strong></p>
-                {coAdvisor && <p>ครูที่ปรึกษาร่วม: <strong>{coAdvisor.name}</strong></p>}
-                <div className="mt-4 flex gap-8 text-sm bg-gray-50 px-8 py-3 rounded-2xl border border-gray-200 print:bg-white print:border-black print:rounded-none">
-                   <p>จำนวนที่รับตามแผน: <strong>{club.capacity}</strong> คน</p>
-                   <p>จำนวนที่สมัครจริง: <strong>{stats.total}</strong> คน</p>
-                </div>
-              </div>
-            </div>
+      <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-md flex flex-col items-center justify-start p-4 md:p-10 overflow-y-auto no-print-backdrop">
+        <div className="flex justify-center gap-4 mb-6 w-full max-w-4xl print:hidden">
+          <button 
+            onClick={() => window.print()}
+            className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 shadow-lg active:scale-95 transition-all"
+          >
+            <Printer size={20} /> พิมพ์รายงาน / บันทึกเป็น PDF
+          </button>
+          <button 
+            onClick={onClose}
+            className="bg-white text-gray-700 px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-100 shadow-lg border active:scale-95 transition-all"
+          >
+            <XCircle size={20} /> ปิดตัวอย่าง
+          </button>
+        </div>
 
-            <table className="w-full border-collapse border-2 border-black text-sm mb-10">
-              <thead>
-                <tr className="bg-gray-100 print:bg-gray-100">
-                  <th className="border border-black p-2.5 w-12 text-center font-bold">ลำดับ</th>
-                  <th className="border border-black p-2.5 w-28 text-center font-bold">รหัสนักเรียน</th>
-                  <th className="border border-black p-2.5 font-bold text-left">ชื่อ-นามสกุล</th>
-                  <th className="border border-black p-2.5 w-24 text-center font-bold">ชั้น/ห้อง</th>
-                  <th className="border border-black p-2.5 w-32 text-center font-bold">ผลการประเมิน</th>
-                  <th className="border border-black p-2.5 w-40 text-center font-bold">หมายเหตุ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clubStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="border border-black p-12 text-center text-gray-400 italic">ไม่พบข้อมูลนักเรียนในชุมนุมนี้</td>
-                  </tr>
+        <div id="print-content" className="flex flex-col gap-0">
+          {pages.map((studentChunk, pageIdx) => (
+            <div key={pageIdx} className="a4-page bg-white relative shadow-2xl overflow-hidden mb-10 print:mb-0 print:shadow-none">
+              {/* Page Number (Upper Right) */}
+              <div className="absolute top-8 right-12 text-[10px] text-gray-400 font-bold print:top-4 print:right-8">
+                หน้า {pageIdx + 1} / {pageCount}
+              </div>
+
+              <div className="p-16 h-full flex flex-col print:p-8">
+                {/* Header: Only show on first page OR every page based on preference. Here we show full on first page */}
+                {pageIdx === 0 ? (
+                  <div className="text-center mb-8">
+                    <img src={SCHOOL_LOGO} alt="School Logo" className="h-24 mx-auto mb-4" />
+                    <h1 className="text-xl font-bold text-black leading-tight">บัญชีรายชื่อนักเรียนและผลการประเมินกิจกรรมชุมนุม</h1>
+                    <h2 className="text-lg font-bold text-gray-800">ชื่อชุมนุม: {club.name} ({club.type})</h2>
+                    <p className="text-md font-medium text-gray-700">โรงเรียนหนองบัวแดงวิทยา</p>
+                    <div className="mt-4 flex justify-center gap-10 text-xs font-bold border-y-2 border-black py-2 mt-4">
+                      <p>ครูที่ปรึกษาหลัก: {advisor?.name || club.advisorId}</p>
+                      {coAdvisor && <p>ครูที่ปรึกษาร่วม: {coAdvisor.name}</p>}
+                    </div>
+                  </div>
                 ) : (
-                  clubStudents.map((s, idx) => (
-                    <tr key={s.id} className="print:break-inside-avoid">
-                      <td className="border border-black p-2.5 text-center">{idx + 1}</td>
-                      <td className="border border-black p-2.5 text-center font-mono">{s.id}</td>
-                      <td className="border border-black p-2.5 px-4 text-left">{s.name}</td>
-                      <td className="border border-black p-2.5 text-center">{s.level}/{s.room}</td>
-                      <td className="border border-black p-2.5 text-center font-bold">
-                        {s.grade === 'ผ' ? 'ผ่าน' : s.grade === 'มผ' ? 'ไม่ผ่าน' : '-'}
-                      </td>
-                      <td className="border border-black p-2.5"></td>
-                    </tr>
-                  ))
+                  <div className="text-center mb-6 border-b-2 border-black pb-2">
+                    <h1 className="text-sm font-bold">บัญชีรายชื่อนักเรียนชุมนุม {club.name} (ต่อ)</h1>
+                  </div>
                 )}
-              </tbody>
-            </table>
 
-            <div className="p-6 border-2 border-black rounded-2xl mb-12 print:rounded-none print:break-inside-avoid">
-               <h4 className="font-bold text-lg mb-4 border-b-2 border-black pb-2 flex items-center gap-2">
-                 <FileText size={20} /> สรุปผลการดำเนินงาน
-               </h4>
-               <div className="grid grid-cols-2 gap-x-12 gap-y-3">
-                  <div className="flex justify-between items-center border-b border-dashed border-gray-300 pb-1">
-                    <span>จำนวนนักเรียนทั้งหมด:</span>
-                    <span className="font-bold text-xl">{stats.total} คน</span>
-                  </div>
-                  <div className="flex justify-between items-center border-b border-dashed border-gray-300 pb-1">
-                    <span>ประเมินผ่าน (ผ):</span>
-                    <span className="font-bold text-xl text-green-700">{stats.passed} คน</span>
-                  </div>
-                  <div className="flex justify-between items-center border-b border-dashed border-gray-300 pb-1">
-                    <span>ประเมินไม่ผ่าน (มผ):</span>
-                    <span className="font-bold text-xl text-red-600">{stats.failed} คน</span>
-                  </div>
-                  <div className="flex justify-between items-center border-b border-dashed border-gray-300 pb-1">
-                    <span>ยังไม่ได้ประเมิน:</span>
-                    <span className="font-bold text-xl text-gray-400">{stats.pending} คน</span>
-                  </div>
-               </div>
-            </div>
+                <table className="w-full border-collapse border-2 border-black text-xs mb-auto">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-black p-2 w-10 text-center">ลำดับ</th>
+                      <th className="border border-black p-2 w-24 text-center">รหัสประจำตัว</th>
+                      <th className="border border-black p-2 text-left">ชื่อ-นามสกุล</th>
+                      <th className="border border-black p-2 w-20 text-center">ชั้น/ห้อง</th>
+                      <th className="border border-black p-2 w-24 text-center">ผลการประเมิน</th>
+                      <th className="border border-black p-2 w-32 text-center">หมายเหตุ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {studentChunk.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="border border-black p-10 text-center text-gray-400 italic">ไม่พบข้อมูลนักเรียน</td>
+                      </tr>
+                    ) : (
+                      studentChunk.map((s, idx) => (
+                        <tr key={s.id} className="h-8">
+                          <td className="border border-black p-1.5 text-center">{(pageIdx * pageSize) + idx + 1}</td>
+                          <td className="border border-black p-1.5 text-center font-mono">{s.id}</td>
+                          <td className="border border-black p-1.5 px-3 text-left">{s.name}</td>
+                          <td className="border border-black p-1.5 text-center">{s.level}/{s.room}</td>
+                          <td className="border border-black p-1.5 text-center font-bold">
+                            {s.grade === 'ผ' ? 'ผ่าน' : s.grade === 'มผ' ? 'ไม่ผ่าน' : '-'}
+                          </td>
+                          <td className="border border-black p-1.5"></td>
+                        </tr>
+                      ))
+                    )}
+                    {/* Fill empty rows to maintain page height if needed */}
+                    {studentChunk.length < pageSize && studentChunk.length > 0 && Array.from({ length: pageSize - studentChunk.length }).map((_, i) => (
+                      <tr key={`empty-${i}`} className="h-8">
+                        <td className="border border-black p-1.5">&nbsp;</td>
+                        <td className="border border-black p-1.5">&nbsp;</td>
+                        <td className="border border-black p-1.5">&nbsp;</td>
+                        <td className="border border-black p-1.5">&nbsp;</td>
+                        <td className="border border-black p-1.5">&nbsp;</td>
+                        <td className="border border-black p-1.5">&nbsp;</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
 
-            <div className="mt-24 flex justify-between px-16 print:break-inside-avoid">
-              <div className="text-center">
-                <div className="mb-14 border-b border-black w-60 mx-auto"></div>
-                <p className="font-bold">(ลงชื่อ)......................................................</p>
-                <p className="mt-2 font-medium">ครูที่ปรึกษาหลัก</p>
-                <p className="text-sm text-gray-500 mt-1">({advisor?.name || '........................................'})</p>
-              </div>
-              {coAdvisor && (
-                <div className="text-center">
-                  <div className="mb-14 border-b border-black w-60 mx-auto"></div>
-                  <p className="font-bold">(ลงชื่อ)......................................................</p>
-                  <p className="mt-2 font-medium">ครูที่ปรึกษาร่วม</p>
-                  <p className="text-sm text-gray-500 mt-1">({coAdvisor.name})</p>
+                {/* Footer/Signatures only on last page */}
+                {pageIdx === pageCount - 1 && (
+                  <div className="mt-8">
+                    <div className="p-4 border-2 border-black rounded-xl mb-8 print:rounded-none">
+                      <h4 className="font-bold text-sm mb-3 border-b border-black pb-1 flex items-center gap-2">
+                        <FileText size={16} /> สรุปผลการดำเนินงาน
+                      </h4>
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
+                        <div className="flex justify-between border-b border-dashed border-gray-300">
+                          <span>จำนวนนักเรียนทั้งหมด:</span>
+                          <span className="font-bold">{stats.total} คน</span>
+                        </div>
+                        <div className="flex justify-between border-b border-dashed border-gray-300">
+                          <span>ประเมินผ่าน (ผ):</span>
+                          <span className="font-bold text-green-700">{stats.passed} คน</span>
+                        </div>
+                        <div className="flex justify-between border-b border-dashed border-gray-300">
+                          <span>ประเมินไม่ผ่าน (มผ):</span>
+                          <span className="font-bold text-red-600">{stats.failed} คน</span>
+                        </div>
+                        <div className="flex justify-between border-b border-dashed border-gray-300">
+                          <span>ยังไม่ได้ประเมิน:</span>
+                          <span className="font-bold text-gray-400">{stats.pending} คน</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-10 flex justify-around items-end">
+                      <div className="text-center">
+                        <div className="mb-10 border-b border-black w-56 mx-auto"></div>
+                        <p className="font-bold text-xs">(ลงชื่อ)......................................................</p>
+                        <p className="mt-1 font-medium text-xs">ครูที่ปรึกษาหลัก</p>
+                        <p className="text-[10px] text-gray-500">({advisor?.name || '........................................'})</p>
+                      </div>
+                      {coAdvisor && (
+                        <div className="text-center">
+                          <div className="mb-10 border-b border-black w-56 mx-auto"></div>
+                          <p className="font-bold text-xs">(ลงชื่อ)......................................................</p>
+                          <p className="mt-1 font-medium text-xs">ครูที่ปรึกษาร่วม</p>
+                          <p className="text-[10px] text-gray-500">({coAdvisor.name})</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-auto pt-6 text-[8px] text-gray-400 italic text-right">
+                  ระบบออนไลน์โรงเรียนหนองบัวแดงวิทยา | พิมพ์เมื่อ: {new Date().toLocaleDateString('th-TH')} {new Date().toLocaleTimeString('th-TH')}
                 </div>
-              )}
+              </div>
             </div>
-
-            <div className="mt-20 text-right text-[10px] text-gray-400 italic print:block">
-               พิมพ์จากระบบออนไลน์เมื่อ: {new Date().toLocaleDateString('th-TH')} {new Date().toLocaleTimeString('th-TH')}
-            </div>
-
-            <div className="mt-12 flex flex-col md:flex-row justify-center gap-4 print:hidden">
-              <button 
-                onClick={() => window.print()}
-                className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-95"
-              >
-                <Download size={24} /> ดาวน์โหลดรายงาน (PDF)
-              </button>
-              <button 
-                onClick={onClose}
-                className="bg-gray-100 text-gray-600 px-10 py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:bg-gray-200 transition-all active:scale-95"
-              >
-                <XCircle size={24} /> ปิดหน้าต่าง
-              </button>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     );
@@ -695,7 +728,6 @@ const App: React.FC = () => {
     }, [selectedCategory]);
 
     const reportData = useMemo(() => {
-      // ใช้ String() เพื่อป้องกันปัญหา Data type (Number vs String) จาก Google Sheets
       return students
         .filter(s => String(s.level) === String(selectedGrade) && String(s.room) === String(selectedRoom))
         .sort((a, b) => parseInt(a.seatNumber) - parseInt(b.seatNumber));
@@ -1447,23 +1479,58 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col selection:bg-blue-100 selection:text-blue-900">
       <style>{`
+        /* PDF and Print Styles */
         @media print {
-          @page { size: A4; margin: 1.5cm; }
-          body { background-color: white !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; visibility: hidden !important; }
-          #print-content, #print-content * { visibility: visible !important; }
+          @page { 
+            size: A4; 
+            margin: 0; /* Remove default headers/footers */
+          }
+          body { 
+            background: white !important; 
+            margin: 0 !important; 
+            padding: 0 !important;
+            visibility: hidden !important;
+          }
+          #print-content {
+            visibility: visible !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 210mm !important; /* Fixed A4 Width */
+            background: white !important;
+          }
+          #print-content * {
+            visibility: visible !important;
+          }
+          .a4-page {
+            width: 210mm !important;
+            height: 297mm !important;
+            padding: 20mm !important;
+            margin: 0 !important;
+            page-break-after: always !important;
+            box-shadow: none !important;
+            border: none !important;
+            position: relative !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
           #root > *:not(.no-print-backdrop) { display: none !important; }
-          header, footer, nav, button, .no-print, .print-hidden { display: none !important; }
-          .no-print-backdrop { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; height: auto !important; display: block !important; background: white !important; backdrop-filter: none !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; z-index: 9999 !important; }
-          .no-print-backdrop > div { box-shadow: none !important; border: none !important; border-radius: 0 !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; position: static !important; background: white !important; }
-          #print-content { display: block !important; padding: 0 !important; margin: 0 !important; background: white !important; width: 100% !important; }
-          table { border-collapse: collapse !important; width: 100% !important; border: 2px solid black !important; }
-          th, td { border: 1px solid black !important; padding: 8px !important; color: black !important; }
-          .print-break-inside-avoid { break-inside: avoid !important; }
-          img { max-width: 150px !important; }
+          .no-print { display: none !important; }
         }
+
+        /* Screen Preview Styles for A4 simulation */
+        .a4-page {
+          width: 210mm;
+          min-height: 297mm;
+          background: white;
+          margin: 0 auto;
+          box-sizing: border-box;
+        }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .animate-fadeIn { animation: fadeIn 0.3s ease-in-out; }
       `}</style>
+
       <Header />
       <main className="flex-1 max-w-7xl mx-auto px-4 w-full pb-20">
         {activeTab === 'home' && <HomeTab />}
