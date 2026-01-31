@@ -328,9 +328,11 @@ const App: React.FC = () => {
 
   // --- Print Preview Overlay Component ---
   const PrintPreviewOverlay = ({ club, onClose }: { club: Club, onClose: () => void }) => {
-    const clubStudents = students
+    // กรองและเรียงลำดับข้อมูลให้นิ่งที่สุดก่อนนำไปใช้
+    const clubStudents = useMemo(() => students
       .filter(s => String(s.clubId) === String(club.id))
-      .sort((a, b) => String(a.level).localeCompare(String(b.level)) || String(a.room).localeCompare(String(b.room)) || parseInt(a.seatNumber) - parseInt(b.seatNumber));
+      .sort((a, b) => String(a.level).localeCompare(String(b.level)) || String(a.room).localeCompare(String(b.room)) || parseInt(a.seatNumber) - parseInt(b.seatNumber)),
+    [students, club.id]);
 
     const advisor = teachers.find(t => String(t.id) === String(club.advisorId));
     const coAdvisor = club.coAdvisorId ? teachers.find(t => String(t.id) === String(club.coAdvisorId)) : null;
@@ -372,7 +374,7 @@ const App: React.FC = () => {
 
               <div className="p-8 h-full flex flex-col print:p-6">
                 {pageIdx === 0 ? (
-                  <div className="flex items-center justify-center gap-4 mb-4 border-b border-black pb-2">
+                  <div className="flex items-center justify-center gap-4 mb-3 border-b border-black pb-2">
                     <img src={SCHOOL_LOGO} alt="School Logo" className="h-14 w-auto shrink-0" />
                     <div className="text-center">
                       <h1 className="text-sm font-bold text-black leading-tight">บัญชีรายชื่อนักเรียนและผลการประเมินกิจกรรมชุมนุม</h1>
@@ -1206,7 +1208,7 @@ const ClubManagementCard = ({ club, students, teachers, isLeadAdvisor, onUpdate,
         <div className="flex gap-2">
           {isLeadAdvisor && (
             <>
-              <button onClick={() => onUpdate(club)} className="bg-white border text-gray-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-gray-100 transition-colors">ตั้งค่าชุมนุม</button>
+              <button onClick={() => onUpdate(club)} className="bg-white border text-gray-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-gray-50 transition-colors">ตั้งค่าชุมนุม</button>
               <button onClick={onDelete} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors">ลบข้อมูล</button>
             </>
           )}
