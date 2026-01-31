@@ -1373,7 +1373,7 @@ const App: React.FC = () => {
             min-height: 297mm !important;
             padding: 4mm !important; /* Minimal margins for maximum space */
             margin: 0 !important;
-            page-break-after: always !important;
+            page-break-after: auto !important; /* Default auto, manual control below */
             box-shadow: none !important;
             border: none !important;
             box-sizing: border-box !important;
@@ -1381,6 +1381,12 @@ const App: React.FC = () => {
             flex-direction: column !important;
             position: relative !important;
             visibility: visible !important;
+          }
+
+          /* Force page break only if it's NOT the last page */
+          .a4-page:not(:last-child) {
+            page-break-after: always !important;
+            break-after: page !important;
           }
 
           * {
