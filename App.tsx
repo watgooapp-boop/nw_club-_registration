@@ -432,7 +432,7 @@ const App: React.FC = () => {
 
   // --- Teacher Print Preview Overlay Component ---
   const TeacherPrintPreviewOverlay = ({ teachersList, onClose }: { teachersList: any[], onClose: () => void }) => {
-    const pageSize = 20; // 20 คนต่อหน้า
+    const pageSize = 18; // ลดลงเพื่อให้เหลือที่สำหรับส่วนลงชื่อ
     const pageCount = Math.max(1, Math.ceil(teachersList.length / pageSize));
     const pages = Array.from({ length: pageCount }, (_, i) => teachersList.slice(i * pageSize, (i + 1) * pageSize));
 
@@ -550,7 +550,7 @@ const App: React.FC = () => {
       pending: clubStudents.filter(s => s.grade === null).length
     };
 
-    const pageSize = 25; // แผ่นละ 25 คน
+    const pageSize = 20; // ลดลงเพื่อให้เหลือที่สำหรับส่วนสรุปและส่วนลงชื่อ
     const pageCount = Math.max(1, Math.ceil(clubStudents.length / pageSize));
     const pages = Array.from({ length: pageCount }, (_, i) => clubStudents.slice(i * pageSize, (i + 1) * pageSize));
 
@@ -626,7 +626,7 @@ const App: React.FC = () => {
                       </tr>
                     ))}
                     {studentChunk.length < pageSize && Array.from({ length: pageSize - studentChunk.length }).map((_, i) => (
-                      <tr key={`empty-${i}`} className="h-7">
+                      <tr key={`empty-${pageIdx}-${i}`} className="h-7">
                         <td className="border border-black p-0.5">&nbsp;</td>
                         <td className="border border-black p-0.5">&nbsp;</td>
                         <td className="border border-black p-0.5">&nbsp;</td>
@@ -1319,7 +1319,7 @@ const App: React.FC = () => {
         @media print {
           @page { 
             size: A4; 
-            margin: 0; 
+            margin: 10mm; 
           }
           
           body > #root > header,
@@ -1355,11 +1355,6 @@ const App: React.FC = () => {
             visibility: visible !important;
           }
 
-          .no-print-backdrop .print\:hidden,
-          .no-print-backdrop button {
-            display: none !important;
-          }
-
           #print-content {
             display: block !important;
             width: 100% !important;
@@ -1368,25 +1363,24 @@ const App: React.FC = () => {
           }
 
           .a4-page {
-            width: 210mm !important;
-            height: 297mm !important;
-            min-height: 297mm !important;
-            padding: 4mm !important; /* Minimal margins for maximum space */
+            width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            padding: 0 !important;
             margin: 0 !important;
-            page-break-after: auto !important; /* Default auto, manual control below */
             box-shadow: none !important;
             border: none !important;
             box-sizing: border-box !important;
-            display: flex !important;
-            flex-direction: column !important;
+            display: block !important;
             position: relative !important;
             visibility: visible !important;
+            break-after: page !important;
+            page-break-after: always !important;
           }
 
-          /* Force page break only if it's NOT the last page */
-          .a4-page:not(:last-child) {
-            page-break-after: always !important;
-            break-after: page !important;
+          .a4-page:last-child {
+            break-after: auto !important;
+            page-break-after: auto !important;
           }
 
           * {
