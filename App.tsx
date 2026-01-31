@@ -35,7 +35,8 @@ import {
   ArrowDownWideNarrow,
   FileUp,
   MapPinned,
-  Info
+  Info,
+  UserPlus
 } from 'lucide-react';
 
 import { 
@@ -180,6 +181,29 @@ const App: React.FC = () => {
     if (popularLimit === -1) return list;
     return list.slice(0, popularLimit);
   }, [clubs, students, popularLimit]);
+
+  const filteredAndSortedTeachers = useMemo(() => {
+    let result = teachers.map(t => {
+      const tClubs = clubs.filter(c => String(c.advisorId) === String(t.id) || String(c.coAdvisorId) === String(t.id));
+      const tRegTotal = students.filter(s => tClubs.map(c => String(c.id)).includes(String(s.clubId))).length;
+      return { ...t, tClubs, tRegTotal };
+    });
+    
+    if (adminFilterDept !== 'ทั้งหมด') {
+      result = result.filter(t => t.department === adminFilterDept);
+    }
+    
+    if (adminFilterClub.trim() !== '') {
+      result = result.filter(t => 
+        t.tClubs.some(c => String(c.name).toLowerCase().includes(adminFilterClub.toLowerCase()))
+      );
+    }
+    
+    if (adminSortOrder === 'asc') result.sort((a, b) => a.tRegTotal - b.tRegTotal);
+    else if (adminSortOrder === 'desc') result.sort((a, b) => b.tRegTotal - a.tRegTotal);
+    
+    return result;
+  }, [teachers, clubs, students, adminFilterDept, adminFilterClub, adminSortOrder]);
 
   const sortedClubs = useMemo(() => {
     return [...clubs]
@@ -342,24 +366,24 @@ const App: React.FC = () => {
         <div id="print-content" className="flex flex-col gap-0 bg-transparent">
           {pages.map((studentChunk, pageIdx) => (
             <div key={pageIdx} className="a4-page bg-white relative overflow-hidden mb-10 print:mb-0 shadow-2xl print:shadow-none">
-              <div className="absolute top-8 right-10 text-[10px] text-gray-400 font-bold print:top-6 print:right-10">
+              <div className="absolute top-4 right-8 text-[9px] text-gray-400 font-bold print:top-4 print:right-8">
                 หน้า {pageIdx + 1} / {pageCount}
               </div>
 
-              <div className="p-12 h-full flex flex-col print:p-8">
+              <div className="p-10 h-full flex flex-col print:p-6">
                 {pageIdx === 0 ? (
-                  <div className="text-center mb-6">
-                    <img src={SCHOOL_LOGO} alt="School Logo" className="h-20 mx-auto mb-2" />
-                    <h1 className="text-lg font-bold text-black leading-tight">บัญชีรายชื่อนักเรียนและผลการประเมินกิจกรรมชุมนุม</h1>
-                    <h2 className="text-md font-bold text-gray-800">ชื่อชุมนุม: {club.name} ({club.type})</h2>
-                    <p className="text-sm font-medium text-gray-700">โรงเรียนหนองบัวแดงวิทยา</p>
-                    <div className="mt-2 flex justify-center gap-10 text-[10px] font-bold border-y border-black py-1.5 mt-2">
+                  <div className="text-center mb-4">
+                    <img src={SCHOOL_LOGO} alt="School Logo" className="h-16 mx-auto mb-1" />
+                    <h1 className="text-md font-bold text-black leading-tight">บัญชีรายชื่อนักเรียนและผลการประเมินกิจกรรมชุมนุม</h1>
+                    <h2 className="text-sm font-bold text-gray-800">ชื่อชุมนุม: {club.name} ({club.type})</h2>
+                    <p className="text-xs font-medium text-gray-700">โรงเรียนหนองบัวแดงวิทยา</p>
+                    <div className="mt-2 flex justify-center gap-8 text-[9px] font-bold border-y border-black py-1 mt-1">
                       <p>ครูที่ปรึกษาหลัก: {advisor?.name || club.advisorId}</p>
                       {coAdvisor && <p>ครูที่ปรึกษาร่วม: {coAdvisor.name}</p>}
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center mb-4 border-b border-black pb-1.5">
+                  <div className="text-center mb-3 border-b border-black pb-1">
                     <h1 className="text-sm font-bold">บัญชีรายชื่อนักเรียนชุมนุม {club.name} (ต่อ) หน้า {pageIdx + 1}</h1>
                   </div>
                 )}
@@ -367,48 +391,47 @@ const App: React.FC = () => {
                 <table className="w-full border-collapse border border-black text-xs mb-auto">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="border border-black p-1.5 w-10 text-center">ลำดับ</th>
-                      <th className="border border-black p-1.5 w-24 text-center">รหัสประจำตัว</th>
-                      <th className="border border-black p-1.5 text-left">ชื่อ-นามสกุล</th>
-                      <th className="border border-black p-1.5 w-16 text-center">ชั้น/ห้อง</th>
-                      <th className="border border-black p-1.5 w-20 text-center">ผลการประเมิน</th>
-                      <th className="border border-black p-1.5 w-28 text-center">หมายเหตุ</th>
+                      <th className="border border-black p-1 w-10 text-center">ลำดับ</th>
+                      <th className="border border-black p-1 w-20 text-center">รหัสประจำตัว</th>
+                      <th className="border border-black p-1 text-left">ชื่อ-นามสกุล</th>
+                      <th className="border border-black p-1 w-14 text-center">ชั้น/ห้อง</th>
+                      <th className="border border-black p-1 w-20 text-center">ผลการประเมิน</th>
+                      <th className="border border-black p-1 w-24 text-center">หมายเหตุ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {studentChunk.map((s, idx) => (
                       <tr key={s.id} className="h-7">
-                        <td className="border border-black p-1 text-center">{(pageIdx * pageSize) + idx + 1}</td>
-                        <td className="border border-black p-1 text-center font-mono">{s.id}</td>
-                        <td className="border border-black p-1 px-2 text-left">{s.name}</td>
-                        <td className="border border-black p-1 text-center">{s.level}/{s.room}</td>
-                        <td className="border border-black p-1 text-center font-bold">
+                        <td className="border border-black p-0.5 text-center">{(pageIdx * pageSize) + idx + 1}</td>
+                        <td className="border border-black p-0.5 text-center font-mono">{s.id}</td>
+                        <td className="border border-black p-0.5 px-2 text-left">{s.name}</td>
+                        <td className="border border-black p-0.5 text-center">{s.level}/{s.room}</td>
+                        <td className="border border-black p-0.5 text-center font-bold">
                           {s.grade === 'ผ' ? 'ผ่าน' : s.grade === 'มผ' ? 'ไม่ผ่าน' : '-'}
                         </td>
-                        <td className="border border-black p-1"></td>
+                        <td className="border border-black p-0.5"></td>
                       </tr>
                     ))}
-                    {/* เติมแถวว่างให้ครบ 25 แถวเพื่อให้ความสูงคงที่ */}
                     {studentChunk.length < pageSize && Array.from({ length: pageSize - studentChunk.length }).map((_, i) => (
                       <tr key={`empty-${i}`} className="h-7">
-                        <td className="border border-black p-1">&nbsp;</td>
-                        <td className="border border-black p-1">&nbsp;</td>
-                        <td className="border border-black p-1">&nbsp;</td>
-                        <td className="border border-black p-1">&nbsp;</td>
-                        <td className="border border-black p-1">&nbsp;</td>
-                        <td className="border border-black p-1">&nbsp;</td>
+                        <td className="border border-black p-0.5">&nbsp;</td>
+                        <td className="border border-black p-0.5">&nbsp;</td>
+                        <td className="border border-black p-0.5">&nbsp;</td>
+                        <td className="border border-black p-0.5">&nbsp;</td>
+                        <td className="border border-black p-0.5">&nbsp;</td>
+                        <td className="border border-black p-0.5">&nbsp;</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
 
                 {pageIdx === pageCount - 1 && (
-                  <div className="mt-6">
-                    <div className="p-3 border border-black rounded-lg mb-6 print:rounded-none">
-                      <h4 className="font-bold text-xs mb-2 border-b border-black pb-1 flex items-center gap-2">
-                        <FileText size={14} /> สรุปผลการดำเนินงาน
+                  <div className="mt-4">
+                    <div className="p-2 border border-black rounded-lg mb-4 print:rounded-none">
+                      <h4 className="font-bold text-[10px] mb-1 border-b border-black pb-0.5 flex items-center gap-2">
+                        <FileText size={12} /> สรุปผลการดำเนินงาน
                       </h4>
-                      <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[10px]">
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-[9px]">
                         <div className="flex justify-between border-b border-dotted border-gray-400">
                           <span>จำนวนนักเรียนทั้งหมด:</span>
                           <span className="font-bold">{stats.total} คน</span>
@@ -428,26 +451,26 @@ const App: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="mt-8 flex justify-around items-end">
+                    <div className="mt-6 flex justify-around items-end">
                       <div className="text-center">
-                        <div className="mb-6 border-b border-black w-48 mx-auto"></div>
-                        <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
-                        <p className="mt-0.5 font-medium text-[10px]">ครูที่ปรึกษาหลัก</p>
-                        <p className="text-[9px] text-gray-500">({advisor?.name || '........................................'})</p>
+                        <div className="mb-5 border-b border-black w-44 mx-auto"></div>
+                        <p className="font-bold text-[9px]">(ลงชื่อ)......................................................</p>
+                        <p className="mt-0.5 font-medium text-[9px]">ครูที่ปรึกษาหลัก</p>
+                        <p className="text-[8px] text-gray-500">({advisor?.name || '........................................'})</p>
                       </div>
                       {coAdvisor && (
                         <div className="text-center">
-                          <div className="mb-6 border-b border-black w-48 mx-auto"></div>
-                          <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
-                          <p className="mt-0.5 font-medium text-[10px]">ครูที่ปรึกษาร่วม</p>
-                          <p className="text-[9px] text-gray-500">({coAdvisor.name})</p>
+                          <div className="mb-5 border-b border-black w-44 mx-auto"></div>
+                          <p className="font-bold text-[9px]">(ลงชื่อ)......................................................</p>
+                          <p className="mt-0.5 font-medium text-[9px]">ครูที่ปรึกษาร่วม</p>
+                          <p className="text-[8px] text-gray-500">({coAdvisor.name})</p>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
                 
-                <div className="mt-auto pt-4 text-[7px] text-gray-400 italic text-right">
+                <div className="mt-auto pt-3 text-[7px] text-gray-400 italic text-right">
                   พิมพ์เมื่อ: {new Date().toLocaleDateString('th-TH')} {new Date().toLocaleTimeString('th-TH')}
                 </div>
               </div>
@@ -704,10 +727,110 @@ const App: React.FC = () => {
     if (!isAdminLoggedIn) return null;
     return (
       <div className="space-y-8 animate-fadeIn print:hidden">
-        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-sm gap-4"><h2 className="text-xl font-bold flex items-center gap-2"><Settings /> จัดการระบบผู้ดูแล</h2><div className="flex gap-2"><button onClick={() => setIsSystemOpen(!isSystemOpen)} className={`px-6 py-2 rounded-xl font-bold text-white ${isSystemOpen ? 'bg-red-500' : 'bg-green-500'}`}>{isSystemOpen ? 'ปิดรับสมัคร' : 'เปิดรับสมัคร'}</button><button onClick={() => setIsAdminLoggedIn(false)} className="bg-gray-100 p-2 rounded-xl"><LogOut size={20}/></button></div></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><StatCard icon={<Users className="text-blue-500"/>} title="ครูทั้งหมด" value={teachers.length} unit="คน" /><StatCard icon={<Users className="text-green-500"/>} title="สมัครแล้ว" value={students.length} unit="คน" /><StatCard icon={<School className="text-purple-500"/>} title="ชุมนุมทั้งหมด" value={clubs.length} unit="ชุมนุม" /></div>
-        <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><div className="flex justify-between items-center mb-6"><h3 className="text-lg font-bold">จัดการครูและชุมนุม</h3><div className="flex gap-2"><button onClick={handleRegisterTeacherModal} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">เพิ่มครู</button><button onClick={handleBulkRegisterTeacherModal} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold">นำเข้าครูเยอะๆ</button></div></div>
-          <div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead className="bg-gray-50"><tr><th className="p-4 border-b">รหัสครู</th><th className="p-4 border-b">ชื่อ-สกุล</th><th className="p-4 border-b">ชุมนุม</th><th className="p-4 border-b text-right">จัดการ</th></tr></thead><tbody className="divide-y">{teachers.map(t => { const tClubs = clubs.filter(c => String(c.advisorId) === String(t.id) || String(c.coAdvisorId) === String(t.id)); return (<tr key={t.id}><td className="p-4 font-mono">{t.id}</td><td className="p-4"><b>{t.name}</b><br/><small>{t.department}</small></td><td className="p-4">{tClubs.map(c => <div key={c.id} className="text-xs text-blue-600">{c.name}</div>)}</td><td className="p-4 text-right"><div className="flex justify-end gap-1"><button onClick={() => handleEditTeacherModal(t)} className="p-2 bg-blue-50 rounded"><Pencil size={16}/></button><button onClick={() => handleDeleteTeacher(t.id)} className="p-2 bg-red-50 rounded"><XCircle size={16}/></button></div></td></tr>); })}</tbody></table></div>
+        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-sm gap-4">
+          <h2 className="text-xl font-bold flex items-center gap-2"><Settings /> จัดการระบบผู้ดูแล</h2>
+          <div className="flex gap-2">
+            <button onClick={() => setIsSystemOpen(!isSystemOpen)} className={`px-6 py-2 rounded-xl font-bold text-white ${isSystemOpen ? 'bg-red-500' : 'bg-green-500'}`}>
+              {isSystemOpen ? 'ปิดรับสมัคร' : 'เปิดรับสมัคร'}
+            </button>
+            <button onClick={() => setIsAdminLoggedIn(false)} className="bg-gray-100 p-2 rounded-xl text-gray-600 hover:text-red-500 transition-colors">
+              <LogOut size={20}/>
+            </button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <StatCard icon={<Users className="text-blue-500"/>} title="ครูทั้งหมด" value={teachers.length} unit="คน" />
+          <StatCard icon={<Users className="text-green-500"/>} title="สมัครแล้ว" value={students.length} unit="คน" />
+          <StatCard icon={<School className="text-purple-500"/>} title="ชุมนุมทั้งหมด" value={clubs.length} unit="ชุมนุม" />
+        </div>
+
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <h3 className="text-lg font-bold flex items-center gap-2"><UserPen size={20} className="text-blue-500" /> จัดการข้อมูลครู</h3>
+            <div className="flex flex-wrap gap-2 w-full md:w-auto">
+              <div className="flex bg-gray-50 border rounded-lg overflow-hidden shrink-0">
+                <span className="bg-gray-200 p-2 text-gray-500"><Filter size={16} /></span>
+                <select 
+                  className="bg-transparent text-xs font-bold p-2 outline-none"
+                  value={adminFilterDept}
+                  onChange={(e) => setAdminFilterDept(e.target.value)}
+                >
+                  <option value="ทั้งหมด">กลุ่มสาระทั้งหมด</option>
+                  {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div className="flex bg-gray-50 border rounded-lg overflow-hidden flex-1 md:flex-none">
+                <span className="bg-gray-200 p-2 text-gray-500"><Search size={16} /></span>
+                <input 
+                  type="text" 
+                  placeholder="ค้นหาชื่อชุมนุม..." 
+                  className="bg-transparent text-xs p-2 outline-none w-full"
+                  value={adminFilterClub}
+                  onChange={(e) => setAdminFilterClub(e.target.value)}
+                />
+              </div>
+              <button onClick={handleRegisterTeacherModal} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow-sm hover:bg-green-700">
+                <PlusCircle size={14} /> เพิ่มครู
+              </button>
+              <button onClick={handleBulkRegisterTeacherModal} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow-sm hover:bg-indigo-700">
+                <UserPlus size={14} /> เพิ่มครูหลายคน
+              </button>
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto rounded-xl border">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-500 tracking-wider">
+                <tr>
+                  <th className="p-4 border-b">รหัสครู</th>
+                  <th className="p-4 border-b">ชื่อ-สกุล / กลุ่มสาระ</th>
+                  <th className="p-4 border-b">ชุมนุมที่ดูแล</th>
+                  <th className="p-4 border-b text-center">
+                    <button 
+                      onClick={() => setAdminSortOrder(adminSortOrder === 'desc' ? 'asc' : 'desc')}
+                      className="flex items-center gap-1 mx-auto hover:text-blue-600 transition-colors"
+                    >
+                      นร. ทั้งหมด
+                      {adminSortOrder === 'asc' ? <ArrowUpNarrowWide size={12}/> : <ArrowDownWideNarrow size={12}/>}
+                    </button>
+                  </th>
+                  <th className="p-4 border-b text-right">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filteredAndSortedTeachers.length === 0 ? (
+                  <tr><td colSpan={5} className="p-10 text-center text-gray-400">ไม่พบข้อมูลครูตามตัวกรอง</td></tr>
+                ) : filteredAndSortedTeachers.map(t => (
+                  <tr key={t.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-4 font-mono text-xs font-bold text-gray-400">{t.id}</td>
+                    <td className="p-4">
+                      <div className="font-bold text-gray-800">{t.name}</div>
+                      <div className="text-[10px] text-blue-500 font-bold">{t.department}</div>
+                    </td>
+                    <td className="p-4">
+                      {t.tClubs.length === 0 ? (
+                        <span className="text-[10px] text-gray-300 italic">ไม่มีชุมนุม</span>
+                      ) : t.tClubs.map(c => (
+                        <div key={c.id} className="text-[10px] text-indigo-600 font-bold mb-0.5">• {c.name}</div>
+                      ))}
+                    </td>
+                    <td className="p-4 text-center">
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-black ${t.tRegTotal > 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'}`}>
+                        {t.tRegTotal} คน
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex justify-end gap-1">
+                        <button onClick={() => handleEditTeacherModal(t)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"><Pencil size={14}/></button>
+                        <button onClick={() => handleDeleteTeacher(t.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"><XCircle size={14}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
     );
@@ -715,34 +838,125 @@ const App: React.FC = () => {
 
   const handleRegisterTeacherModal = async () => {
     const { value: formValues } = await Swal.fire({
-      title: 'ลงทะเบียนครูใหม่', html: `<div class="text-left"><label class="text-xs">รหัสครู 4 หลัก</label><input id="t-id" class="w-full border p-2 mb-2 rounded"><label class="text-xs">ชื่อ-นามสกุล</label><input id="t-name" class="w-full border p-2 mb-2 rounded"><label class="text-xs">กลุ่มสาระ</label><select id="t-dept" class="w-full border p-2 rounded">${DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('')}</select></div>`, showCancelButton: true, preConfirm: () => ({ id: (document.getElementById('t-id') as HTMLInputElement).value.trim(), name: (document.getElementById('t-name') as HTMLInputElement).value.trim(), department: (document.getElementById('t-dept') as HTMLSelectElement).value })
+      title: 'ลงทะเบียนครูใหม่', 
+      html: `
+        <div class="text-left space-y-3 p-1">
+          <div><label class="text-[10px] font-black uppercase text-gray-400">รหัสครู 4 หลัก</label><input id="t-id" class="w-full border p-2.5 rounded-lg text-sm" placeholder="เช่น T001"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">ชื่อ-นามสกุล</label><input id="t-name" class="w-full border p-2.5 rounded-lg text-sm" placeholder="ระบุชื่อ-นามสกุล"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">กลุ่มสาระการเรียนรู้</label><select id="t-dept" class="w-full border p-2.5 rounded-lg text-sm">${DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('')}</select></div>
+        </div>`, 
+      showCancelButton: true, 
+      confirmButtonText: 'บันทึกข้อมูล',
+      cancelButtonText: 'ยกเลิก',
+      preConfirm: () => {
+        const id = (document.getElementById('t-id') as HTMLInputElement).value.trim();
+        const name = (document.getElementById('t-name') as HTMLInputElement).value.trim();
+        if(!id || !name) { Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน'); return false; }
+        return { id, name, department: (document.getElementById('t-dept') as HTMLSelectElement).value }
+      }
     });
     if (formValues) handleAddTeacher(formValues);
   };
 
   const handleBulkRegisterTeacherModal = async () => {
     const { value: bulkText } = await Swal.fire({
-      title: 'นำเข้าครูเยอะๆ (รหัส,ชื่อ,กลุ่มสาระ)', html: `<textarea id="bulk-t" class="w-full h-40 border p-2 rounded" placeholder="t001,นาย ก,ศิลปะ"></textarea>`, showCancelButton: true, preConfirm: () => (document.getElementById('bulk-t') as HTMLTextAreaElement).value.split('\n').map(line => { const [id, name, dept] = line.split(',').map(s => s.trim()); return { id, name, department: dept }; }).filter(t => t.id && t.name && DEPARTMENTS.includes(t.department))
+      title: 'เพิ่มครูหลายคน', 
+      html: `
+        <div class="text-left space-y-3 p-1">
+          <p class="text-[10px] text-blue-500 font-bold bg-blue-50 p-3 rounded-lg border border-blue-100">
+            รูปแบบ: รหัสครู,ชื่อ-นามสกุล,กลุ่มสาระ (บรรทัดละ 1 คน)<br/>
+            ตัวอย่าง: t001, นายสมชาย ใจดี, คณิตศาสตร์
+          </p>
+          <textarea id="bulk-t" class="w-full h-48 border p-3 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="t001,นาย ก,ศิลปะ"></textarea>
+        </div>`, 
+      showCancelButton: true, 
+      confirmButtonText: 'นำเข้าข้อมูล',
+      cancelButtonText: 'ยกเลิก',
+      width: '600px',
+      preConfirm: () => {
+        const text = (document.getElementById('bulk-t') as HTMLTextAreaElement).value;
+        return text.split('\n')
+          .filter(line => line.trim() !== "")
+          .map(line => { 
+            const [id, name, dept] = line.split(',').map(s => s.trim()); 
+            return { id, name, department: dept }; 
+          })
+          .filter(t => t.id && t.name && DEPARTMENTS.includes(t.department))
+      }
     });
-    if (bulkText) handleBulkAddTeachers(bulkText);
+    if (bulkText && bulkText.length > 0) handleBulkAddTeachers(bulkText);
+    else if (bulkText) Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาตรวจสอบรูปแบบข้อมูล หรือชื่อกลุ่มสาระให้ถูกต้อง', 'error');
   };
 
   const handleEditTeacherModal = async (teacher: Teacher) => {
     const { value: formValues } = await Swal.fire({
-      title: 'แก้ไขข้อมูลครู', html: `<div class="text-left"><label class="text-xs">รหัสครู</label><input id="t-id" class="w-full border p-2 mb-2 rounded" value="${teacher.id}"><label class="text-xs">ชื่อ-นามสกุล</label><input id="t-name" class="w-full border p-2 mb-2 rounded" value="${teacher.name}"><label class="text-xs">กลุ่มสาระ</label><select id="t-dept" class="w-full border p-2 rounded">${DEPARTMENTS.map(d => `<option value="${d}" ${teacher.department === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>`, showCancelButton: true, preConfirm: () => ({ id: (document.getElementById('t-id') as HTMLInputElement).value.trim(), name: (document.getElementById('t-name') as HTMLInputElement).value.trim(), department: (document.getElementById('t-dept') as HTMLSelectElement).value })
+      title: 'แก้ไขข้อมูลครู', 
+      html: `
+        <div class="text-left space-y-3 p-1">
+          <div><label class="text-[10px] font-black uppercase text-gray-400">รหัสครู</label><input id="t-id" class="w-full border p-2.5 rounded-lg text-sm" value="${teacher.id}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">ชื่อ-นามสกุล</label><input id="t-name" class="w-full border p-2.5 rounded-lg text-sm" value="${teacher.name}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">กลุ่มสาระ</label><select id="t-dept" class="w-full border p-2.5 rounded-lg text-sm">${DEPARTMENTS.map(d => `<option value="${d}" ${teacher.department === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+        </div>`, 
+      showCancelButton: true, 
+      confirmButtonText: 'อัปเดตข้อมูล',
+      preConfirm: () => ({ 
+        id: (document.getElementById('t-id') as HTMLInputElement).value.trim(), 
+        name: (document.getElementById('t-name') as HTMLInputElement).value.trim(), 
+        department: (document.getElementById('t-dept') as HTMLSelectElement).value 
+      })
     });
     if (formValues) handleUpdateTeacher(teacher.id, formValues);
   };
 
   const openCreateClubModal = (teacher: Teacher) => {
     Swal.fire({
-      title: 'สร้างชุมนุมใหม่', html: `<div class="text-left space-y-2"><label class="text-xs">ชื่อชุมนุม</label><input id="c-name" class="w-full border p-2 rounded"><label class="text-xs">ประเภท</label><select id="c-type" class="w-full border p-2 rounded">${Object.values(ClubType).map(t => `<option value="${t}">${t}</option>`).join('')}</select><label class="text-xs">ระดับ</label><select id="c-target" class="w-full border p-2 rounded">${Object.values(LevelCategory).map(t => `<option value="${t}">${t}</option>`).join('')}</select><label class="text-xs">สถานที่</label><input id="c-loc" class="w-full border p-2 rounded"></div>`, showCancelButton: true, preConfirm: () => ({ name: (document.getElementById('c-name') as HTMLInputElement).value.trim(), type: (document.getElementById('c-type') as HTMLSelectElement).value, levelTarget: (document.getElementById('c-target') as HTMLSelectElement).value, location: (document.getElementById('c-loc') as HTMLInputElement).value, advisorId: teacher.id, capacity: 25, description: '', phone: '' })
+      title: 'สร้างชุมนุมใหม่', 
+      html: `
+        <div class="text-left space-y-3 p-1">
+          <div><label class="text-[10px] font-black uppercase text-gray-400">ชื่อชุมนุม</label><input id="c-name" class="w-full border p-2.5 rounded-lg text-sm"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">ประเภท</label><select id="c-type" class="w-full border p-2.5 rounded-lg text-sm">${Object.values(ClubType).map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">ระดับที่รับ</label><select id="c-target" class="w-full border p-2.5 rounded-lg text-sm">${Object.values(LevelCategory).map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">สถานที่เรียน</label><input id="c-loc" class="w-full border p-2.5 rounded-lg text-sm" placeholder="ระบุห้องเรียน หรือสนาม"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">รายละเอียดเพิ่มเติม (ถ้ามี)</label><textarea id="c-desc" class="w-full border p-2.5 rounded-lg text-sm h-20" placeholder="ระบุรายละเอียดสั้นๆ"></textarea></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">รหัสครูที่ปรึกษาร่วม (ถ้ามี)</label><input id="c-co" class="w-full border p-2.5 rounded-lg text-sm" placeholder="ระบุรหัส 4 หลัก"></div>
+        </div>`, 
+      showCancelButton: true, 
+      confirmButtonText: 'สร้างชุมนุม',
+      preConfirm: () => ({ 
+        name: (document.getElementById('c-name') as HTMLInputElement).value.trim(), 
+        type: (document.getElementById('c-type') as HTMLSelectElement).value, 
+        levelTarget: (document.getElementById('c-target') as HTMLSelectElement).value, 
+        location: (document.getElementById('c-loc') as HTMLInputElement).value, 
+        advisorId: teacher.id, 
+        coAdvisorId: (document.getElementById('c-co') as HTMLInputElement).value.trim() || undefined,
+        capacity: 25, 
+        description: (document.getElementById('c-desc') as HTMLTextAreaElement).value.trim(), 
+        phone: '' 
+      })
     }).then(res => { if (res.isConfirmed) handleCreateClub(res.value); });
   };
 
   const openUpdateClubModal = (club: Club, teacher: Teacher) => {
     Swal.fire({
-      title: 'แก้ไขชุมนุม', html: `<div class="text-left space-y-2"><label class="text-xs">ชื่อชุมนุม</label><input id="c-name" class="w-full border p-2 rounded" value="${club.name}"><label class="text-xs">สถานที่</label><input id="c-loc" class="w-full border p-2 rounded" value="${club.location}"></div>`, showCancelButton: true, preConfirm: () => ({ ...club, name: (document.getElementById('c-name') as HTMLInputElement).value.trim(), location: (document.getElementById('c-loc') as HTMLInputElement).value.trim() })
+      title: 'แก้ไขชุมนุม', 
+      html: `
+        <div class="text-left space-y-3 p-1">
+          <div><label class="text-[10px] font-black uppercase text-gray-400">ชื่อชุมนุม</label><input id="c-name" class="w-full border p-2.5 rounded-lg text-sm" value="${club.name}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">สถานที่</label><input id="c-loc" class="w-full border p-2.5 rounded-lg text-sm" value="${club.location}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">รายละเอียด</label><textarea id="c-desc" class="w-full border p-2.5 rounded-lg text-sm h-20">${club.description || ''}</textarea></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">รหัสครูที่ปรึกษาร่วม</label><input id="c-co" class="w-full border p-2.5 rounded-lg text-sm" value="${club.coAdvisorId || ''}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">จำนวนที่รับสมัคร</label><input id="c-cap" type="number" class="w-full border p-2.5 rounded-lg text-sm" value="${club.capacity}"></div>
+        </div>`, 
+      showCancelButton: true, 
+      confirmButtonText: 'บันทึกการแก้ไข',
+      preConfirm: () => ({ 
+        ...club, 
+        name: (document.getElementById('c-name') as HTMLInputElement).value.trim(), 
+        location: (document.getElementById('c-loc') as HTMLInputElement).value.trim(),
+        description: (document.getElementById('c-desc') as HTMLTextAreaElement).value.trim(),
+        coAdvisorId: (document.getElementById('c-co') as HTMLInputElement).value.trim() || undefined,
+        capacity: parseInt((document.getElementById('c-cap') as HTMLInputElement).value) || 25
+      })
     }).then(res => { if (res.isConfirmed) handleUpdateClub(res.value); });
   };
 
@@ -817,7 +1031,7 @@ const App: React.FC = () => {
             width: 210mm !important;
             height: 297mm !important;
             min-height: 297mm !important;
-            padding: 10mm !important; /* ลดระยะขอบด้านนอกแผ่น */
+            padding: 5mm !important; /* ลดระยะขอบแผ่นลงอีก */
             margin: 0 !important;
             page-break-after: always !important;
             box-shadow: none !important;
@@ -886,29 +1100,29 @@ const ClubCard = ({ club, students, teachers, onRegister, disabled }: any) => {
         {club.description && (
           <div className="flex items-start gap-1.5 mb-3 text-xs text-gray-600 italic">
             <Info size={14} className="mt-0.5 shrink-0" />
-            <p className="line-clamp-2">{club.description}</p>
+            <p className="line-clamp-3">{club.description}</p>
           </div>
         )}
 
         {/* ข้อมูลครูที่ปรึกษา */}
-        <div className="space-y-1 mb-6">
+        <div className="space-y-1 mb-6 border-t pt-3 mt-auto">
           <div className="flex items-center gap-2 text-xs text-gray-500">
-            <UserPen size={14} />
+            <UserPen size={14} className="text-blue-500 shrink-0" />
             <span>ครูที่ปรึกษา: <b>{advisor?.name || '-'}</b></span>
           </div>
           {coAdvisor && (
             <div className="flex items-center gap-2 text-xs text-gray-500">
-              <Users size={14} />
+              <Users size={14} className="text-blue-500 shrink-0" />
               <span>ครูที่ปรึกษาร่วม: <b>{coAdvisor.name}</b></span>
             </div>
           )}
           <div className="flex items-center gap-2 text-xs text-gray-500">
-            <MapPinned size={14} />
+            <MapPinned size={14} className="text-blue-500 shrink-0" />
             <span>สถานที่: <b>{club.location}</b></span>
           </div>
         </div>
 
-        <div className="mt-auto">
+        <div>
           <div className="flex justify-between text-[10px] mb-1.5 font-bold uppercase text-gray-400">
             <span>ความจุ</span>
             <span>{count} / {club.capacity}</span>
@@ -924,7 +1138,7 @@ const ClubCard = ({ club, students, teachers, onRegister, disabled }: any) => {
       <button 
         disabled={disabled || isFull} 
         onClick={onRegister} 
-        className={`w-full py-4 text-center font-bold text-sm ${isFull || disabled ? 'bg-gray-100 text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'}`}
+        className={`w-full py-4 text-center font-bold text-sm ${isFull || disabled ? 'bg-gray-100 text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 transition-colors'}`}
       >
         {isFull ? 'เต็มแล้ว' : 'สมัครชุมนุม'}
       </button>
@@ -934,21 +1148,91 @@ const ClubCard = ({ club, students, teachers, onRegister, disabled }: any) => {
 
 const ClubManagementCard = ({ club, students, teachers, isLeadAdvisor, onUpdate, onDelete, onGradeUpdate, onStudentDelete, onStudentUpdate, onPrint }: any) => {
   const clubStudents = students.filter((s: Student) => String(s.clubId) === String(club.id)).sort((a: Student, b: Student) => parseInt(a.seatNumber) - parseInt(b.seatNumber));
+  
   const handleEditStudent = async (student: Student) => {
     const { value: formValues } = await Swal.fire({
-      title: 'แก้ไขนักเรียน', html: `<div class="text-left"><label class="text-xs">ชื่อ-สกุล</label><input id="s-name" class="w-full border p-2 mb-2 rounded" value="${student.name}"><label class="text-xs">เลขที่</label><input id="s-seat" type="number" class="w-full border p-2 rounded" value="${student.seatNumber}"></div>`, showCancelButton: true, preConfirm: () => ({ name: (document.getElementById('s-name') as HTMLInputElement).value.trim(), seatNumber: (document.getElementById('s-seat') as HTMLInputElement).value })
+      title: 'แก้ไขข้อมูลนักเรียน', 
+      html: `
+        <div class="text-left space-y-3 p-1">
+          <div><label class="text-[10px] font-black uppercase text-gray-400">ชื่อ-นามสกุล</label><input id="s-name" class="w-full border p-2.5 rounded-lg text-sm" value="${student.name}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400">เลขที่</label><input id="s-seat" type="number" class="w-full border p-2.5 rounded-lg text-sm" value="${student.seatNumber}"></div>
+        </div>`, 
+      showCancelButton: true, 
+      confirmButtonText: 'บันทึก',
+      preConfirm: () => ({ 
+        name: (document.getElementById('s-name') as HTMLInputElement).value.trim(), 
+        seatNumber: (document.getElementById('s-seat') as HTMLInputElement).value 
+      })
     });
     if (formValues) onStudentUpdate(student.id, formValues);
   };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="bg-slate-50 p-6 flex justify-between items-center border-b gap-4">
-        <div><h4 className="text-2xl font-bold text-blue-900">{club.name}</h4><div className="text-xs font-bold text-gray-500">สถานที่: {club.location} | จำนวน {clubStudents.length} / {club.capacity}</div></div>
-        <div className="flex gap-2">{isLeadAdvisor && (<><button onClick={() => onUpdate(club)} className="bg-white border text-gray-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm">แก้ไข</button><button onClick={onDelete} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold">ลบ</button></>)}</div>
+        <div>
+          <h4 className="text-2xl font-bold text-blue-900">{club.name}</h4>
+          <div className="text-xs font-bold text-gray-500">สถานที่: {club.location} | จำนวน {clubStudents.length} / {club.capacity}</div>
+        </div>
+        <div className="flex gap-2">
+          {isLeadAdvisor && (
+            <>
+              <button onClick={() => onUpdate(club)} className="bg-white border text-gray-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-gray-50 transition-colors">แก้ไขชุมนุม</button>
+              <button onClick={onDelete} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors">ลบชุมนุม</button>
+            </>
+          )}
+        </div>
       </div>
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6"><h5 className="font-bold flex items-center gap-2"><Users size={18} /> รายชื่อนักเรียน</h5><button onClick={onPrint} className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg active:scale-95"><Printer size={16} /> พิมพ์รายงาน</button></div>
-        <div className="overflow-x-auto rounded-xl"><table className="w-full text-sm text-left"><thead className="bg-gray-50"><tr><th className="p-4">รหัส</th><th className="p-4">ชื่อ-สกุล</th><th className="p-4 text-center">ประเมิน</th><th className="p-4 text-center">จัดการ</th></tr></thead><tbody className="divide-y">{clubStudents.map((s: Student) => (<tr key={s.id}><td className="p-4 font-mono">{s.id}</td><td className="p-4"><b>{s.name}</b><br/><small>{s.level}/{s.room} (เลขที่ {s.seatNumber})</small></td><td className="p-4 text-center"><div className="flex justify-center gap-2"><button onClick={() => onGradeUpdate(s.id, 'ผ')} className={`px-2 py-1 rounded text-xs ${s.grade === 'ผ' ? 'bg-green-600 text-white' : 'bg-gray-100'}`}>ผ</button><button onClick={() => onGradeUpdate(s.id, 'มผ')} className={`px-2 py-1 rounded text-xs ${s.grade === 'มผ' ? 'bg-red-600 text-white' : 'bg-gray-100'}`}>มผ</button></div></td><td className="p-4 text-center"><div className="flex justify-center gap-1"><button onClick={() => handleEditStudent(s)} className="p-2 text-blue-400"><Pencil size={18}/></button><button onClick={() => onStudentDelete(s.id)} className="p-2 text-red-400"><XCircle size={18}/></button></div></td></tr>))}</tbody></table></div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <h5 className="font-bold flex items-center gap-2 text-gray-700"><Users size={18} /> รายชื่อนักเรียนในชุมนุม</h5>
+          <button onClick={onPrint} className="bg-gray-800 text-white px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg active:scale-95 hover:bg-gray-900 transition-all">
+            <Printer size={16} /> พิมพ์รายงาน / PDF
+          </button>
+        </div>
+        <div className="overflow-x-auto rounded-xl border">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-500 tracking-wider">
+              <tr>
+                <th className="p-4 border-b text-center w-16">รหัส</th>
+                <th className="p-4 border-b">ชื่อ-สกุล / ข้อมูลชั้นเรียน</th>
+                <th className="p-4 border-b text-center">ผลประเมิน</th>
+                <th className="p-4 border-b text-right">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {clubStudents.length === 0 ? (
+                <tr><td colSpan={4} className="p-10 text-center text-gray-400 italic">ยังไม่มีนักเรียนสมัครชุมนุมนี้</td></tr>
+              ) : clubStudents.map((s: Student) => (
+                <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="p-4 text-center font-mono font-bold text-blue-600">{s.id}</td>
+                  <td className="p-4">
+                    <div className="font-bold text-gray-800">{s.name}</div>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase">{s.level}/{s.room} • เลขที่ {s.seatNumber}</div>
+                  </td>
+                  <td className="p-4 text-center">
+                    <div className="flex justify-center gap-1.5">
+                      <button 
+                        onClick={() => onGradeUpdate(s.id, 'ผ')} 
+                        className={`px-3 py-1 rounded-full text-[10px] font-black transition-all ${s.grade === 'ผ' ? 'bg-green-600 text-white shadow-md scale-110' : 'bg-gray-100 text-gray-400 hover:bg-green-50 hover:text-green-600'}`}
+                      >ผ</button>
+                      <button 
+                        onClick={() => onGradeUpdate(s.id, 'มผ')} 
+                        className={`px-3 py-1 rounded-full text-[10px] font-black transition-all ${s.grade === 'มผ' ? 'bg-red-600 text-white shadow-md scale-110' : 'bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-600'}`}
+                      >มผ</button>
+                    </div>
+                  </td>
+                  <td className="p-4 text-right">
+                    <div className="flex justify-end gap-1">
+                      <button onClick={() => handleEditStudent(s)} className="p-2 text-blue-500 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"><Pencil size={16}/></button>
+                      <button onClick={() => onStudentDelete(s.id)} className="p-2 text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"><XCircle size={16}/></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
