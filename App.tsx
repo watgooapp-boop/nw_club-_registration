@@ -822,7 +822,16 @@ const App: React.FC = () => {
     const teacherClubs = clubs.filter(c => String(c.advisorId) === String(foundTeacher.id) || String(c.coAdvisorId) === String(foundTeacher.id));
     return (
       <div className="space-y-8 animate-fadeIn">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm gap-4 print:hidden"><div className="flex items-center gap-3"><div className="bg-blue-100 p-3 rounded-full text-blue-600"><Users size={28} /></div><div><h2 className="font-bold text-xl">ครู{foundTeacher.name}</h2><p className="text-sm text-gray-500">{foundTeacher.department}</p></div></div><button onClick={() => { setLoggedInTeacher(null); setFoundTeacher(null); }} className="text-red-500 font-bold flex items-center gap-1"><LogOut size={18} /> ออกจากระบบ</button></div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm gap-4 print:hidden">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 p-3 rounded-full text-blue-600"><Users size={28} /></div>
+            <div>
+              <h2 className="font-bold text-xl">ครู{foundTeacher.name}</h2>
+              <p className="text-sm text-gray-600 font-bold">รหัส: <span className="text-blue-600">{foundTeacher.id}</span> | กลุ่มสาระ: {foundTeacher.department}</p>
+            </div>
+          </div>
+          <button onClick={() => { setLoggedInTeacher(null); setFoundTeacher(null); }} className="text-red-500 font-bold flex items-center gap-1"><LogOut size={18} /> ออกจากระบบ</button>
+        </div>
         <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 print:hidden"><div className="flex flex-col md:flex-row gap-3"><input type="text" placeholder="ค้นหาครูด้วยรหัส 4 หลัก" className="flex-1 border p-3 rounded-xl" value={searchId} onChange={(e) => setSearchId(e.target.value)}/><button onClick={() => { const t = teachers.find(t => String(t.id) === String(searchId)); if (t) setFoundTeacher(t); else Swal.fire('ไม่พบข้อมูล', 'ไม่พบรหัสครูในระบบ', 'info'); }} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">ค้นหา</button></div></section>
         <section className="space-y-6">
           <div className="flex justify-between items-center print:hidden"><h3 className="text-2xl font-bold text-gray-800">ชุมนุมที่ดูแล</h3>{teacherClubs.length === 0 && <button onClick={() => openCreateClubModal(foundTeacher)} className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold">สร้างชุมนุมใหม่</button>}</div>
@@ -1103,6 +1112,11 @@ const App: React.FC = () => {
   };
 
   const openCreateClubModal = (teacher: Teacher) => {
+    const availableCoAdvisors = teachers.filter(t => 
+      t.id !== teacher.id && 
+      !clubs.some(c => String(c.advisorId) === String(t.id) || String(c.coAdvisorId) === String(t.id))
+    );
+
     Swal.fire({
       title: 'สร้างชุมนุมใหม่', 
       html: `
@@ -1114,7 +1128,14 @@ const App: React.FC = () => {
           </div>
           <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">สถานที่เรียน / ห้องเรียน</label><input id="c-loc" class="w-full border p-3 rounded-xl text-sm" placeholder="เช่น ห้อง 111 หรือ สนามฟุตบอล"></div>
           <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">รายละเอียด / คำอธิบายสั้นๆ</label><textarea id="c-desc" class="w-full border p-3 rounded-xl text-sm h-24" placeholder="ระบุสิ่งที่นักเรียนจะได้เรียนรู้ หรือคุณสมบัติผู้สมัคร"></textarea></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">รหัสครูที่ปรึกษาร่วม (ถ้ามี)</label><input id="c-co" class="w-full border p-3 rounded-xl text-sm" placeholder="ระบุรหัส 4 หลัก"></div>
+          <div>
+            <label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">ครูที่ปรึกษาร่วม (ถ้ามี)</label>
+            <select id="c-co" class="w-full border p-3 rounded-xl text-sm">
+              <option value="">-- ไม่มีครูที่ปรึกษาร่วม --</option>
+              ${availableCoAdvisors.map(t => `<option value="${t.id}">${t.name} (${t.id})</option>`).join('')}
+            </select>
+          </div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">เบอร์โทรศัพท์ติดต่อ</label><input id="c-phone" type="text" class="w-full border p-3 rounded-xl text-sm" placeholder="เช่น 0812345678"></div>
         </div>`, 
       showCancelButton: true, 
       confirmButtonText: 'ยืนยันสร้างชุมนุม',
@@ -1128,16 +1149,21 @@ const App: React.FC = () => {
           levelTarget: (document.getElementById('c-target') as HTMLSelectElement).value, 
           location: (document.getElementById('c-loc') as HTMLInputElement).value, 
           advisorId: teacher.id, 
-          coAdvisorId: (document.getElementById('c-co') as HTMLInputElement).value.trim() || undefined,
+          coAdvisorId: (document.getElementById('c-co') as HTMLSelectElement).value || undefined,
           capacity: 25, 
           description: (document.getElementById('c-desc') as HTMLTextAreaElement).value.trim(), 
-          phone: '' 
+          phone: (document.getElementById('c-phone') as HTMLInputElement).value.trim() 
         }
       }
     }).then(res => { if (res.isConfirmed) handleCreateClub(res.value); });
   };
 
   const openUpdateClubModal = (club: Club, teacher: Teacher) => {
+    const availableCoAdvisors = teachers.filter(t => 
+      t.id !== club.advisorId && 
+      (!clubs.some(c => (String(c.advisorId) === String(t.id) || String(c.coAdvisorId) === String(t.id)) && String(c.id) !== String(club.id)) || String(t.id) === String(club.coAdvisorId))
+    );
+
     Swal.fire({
       title: 'แก้ไขข้อมูลชุมนุม', 
       html: `
@@ -1145,7 +1171,14 @@ const App: React.FC = () => {
           <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">ชื่อชุมนุม</label><input id="c-name" class="w-full border p-3 rounded-xl text-sm font-bold" value="${club.name}"></div>
           <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">สถานที่เรียน</label><input id="c-loc" class="w-full border p-3 rounded-xl text-sm" value="${club.location}"></div>
           <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">คำอธิบาย</label><textarea id="c-desc" class="w-full border p-3 rounded-xl text-sm h-24">${club.description || ''}</textarea></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">รหัสครูที่ปรึกษาร่วม</label><input id="c-co" class="w-full border p-3 rounded-xl text-sm" value="${club.coAdvisorId || ''}" placeholder="ระบุรหัส 4 หลัก"></div>
+          <div>
+            <label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">ครูที่ปรึกษาร่วม</label>
+            <select id="c-co" class="w-full border p-3 rounded-xl text-sm">
+              <option value="">-- ไม่มีครูที่ปรึกษาร่วม --</option>
+              ${availableCoAdvisors.map(t => `<option value="${t.id}" ${club.coAdvisorId === t.id ? 'selected' : ''}>${t.name} (${t.id})</option>`).join('')}
+            </select>
+          </div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">เบอร์โทรศัพท์ติดต่อ</label><input id="c-phone" type="text" class="w-full border p-3 rounded-xl text-sm" value="${club.phone || ''}" placeholder="เช่น 0812345678"></div>
           <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">จำนวนรับสมัคร (คน)</label><input id="c-cap" type="number" class="w-full border p-3 rounded-xl text-sm" value="${club.capacity}"></div>
         </div>`, 
       showCancelButton: true, 
@@ -1156,7 +1189,8 @@ const App: React.FC = () => {
         name: (document.getElementById('c-name') as HTMLInputElement).value.trim(), 
         location: (document.getElementById('c-loc') as HTMLInputElement).value.trim(),
         description: (document.getElementById('c-desc') as HTMLTextAreaElement).value.trim(),
-        coAdvisorId: (document.getElementById('c-co') as HTMLInputElement).value.trim() || undefined,
+        coAdvisorId: (document.getElementById('c-co') as HTMLSelectElement).value || undefined,
+        phone: (document.getElementById('c-phone') as HTMLInputElement).value.trim(),
         capacity: parseInt((document.getElementById('c-cap') as HTMLInputElement).value) || 25
       })
     }).then(res => { if (res.isConfirmed) handleUpdateClub(res.value); });
@@ -1297,7 +1331,6 @@ const ClubCard = ({ club, students, teachers, onRegister, disabled }: any) => {
         </div>
         <h3 className="text-xl font-bold text-gray-800 mb-1 leading-tight group-hover:text-blue-900 transition-colors">{club.name}</h3>
         
-        {/* รายละเอียดเพิ่มเติม */}
         {club.description && (
           <div className="flex items-start gap-1.5 my-3 text-xs text-gray-500 bg-gray-50 p-3 rounded-xl border border-dashed">
             <Info size={14} className="mt-0.5 shrink-0 text-blue-400" />
@@ -1305,7 +1338,6 @@ const ClubCard = ({ club, students, teachers, onRegister, disabled }: any) => {
           </div>
         )}
 
-        {/* ข้อมูลครูที่ปรึกษา */}
         <div className="space-y-1.5 mb-6 mt-auto pt-4 border-t border-gray-50">
           <div className="flex items-center gap-2 text-xs text-gray-600">
             <UserPen size={14} className="text-blue-500 shrink-0" />
@@ -1321,6 +1353,12 @@ const ClubCard = ({ club, students, teachers, onRegister, disabled }: any) => {
             <MapPinned size={14} className="text-orange-400 shrink-0" />
             <span>สถานที่เรียน: <b>{club.location}</b></span>
           </div>
+          {club.phone && (
+            <div className="flex items-center gap-2 text-xs text-gray-600">
+              <Phone size={14} className="text-green-500 shrink-0" />
+              <span>ติดต่อ: <b>{club.phone}</b></span>
+            </div>
+          )}
         </div>
 
         <div>
@@ -1378,7 +1416,7 @@ const ClubManagementCard = ({ club, students, teachers, isLeadAdvisor, onUpdate,
         <div className="flex gap-2">
           {isLeadAdvisor && (
             <>
-              <button onClick={() => onUpdate(club)} className="bg-white border text-gray-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-gray-100 transition-colors">ตั้งค่าชุมนุม</button>
+              <button onClick={() => onUpdate(club)} className="bg-white border text-gray-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-gray-100 transition-colors">แก้ไขชุมนุม</button>
               <button onClick={onDelete} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors">ลบข้อมูล</button>
             </>
           )}
