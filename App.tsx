@@ -261,7 +261,7 @@ const App: React.FC = () => {
     });
     if (uniqueNewOnes.length > 0) {
       setTeachers(prev => [...prev, ...uniqueNewOnes]);
-      Swal.fire('สำเร็จ', `นำเข้าครูสำเร็จ ${uniqueNewOnes.length} คน`, 'success');
+      Swal.fire('สำเร็จ', `เพิ่มครูสำเร็จ ${uniqueNewOnes.length} คน`, 'success');
     }
   };
 
@@ -366,47 +366,52 @@ const App: React.FC = () => {
         <div id="print-content" className="flex flex-col gap-0 bg-transparent">
           {pages.map((studentChunk, pageIdx) => (
             <div key={pageIdx} className="a4-page bg-white relative overflow-hidden mb-10 print:mb-0 shadow-2xl print:shadow-none">
-              <div className="absolute top-4 right-8 text-[9px] text-gray-400 font-bold print:top-4 print:right-8">
+              <div className="absolute top-2 right-6 text-[8px] text-gray-400 font-bold print:top-2 print:right-6">
                 หน้า {pageIdx + 1} / {pageCount}
               </div>
 
-              <div className="p-10 h-full flex flex-col print:p-6">
+              <div className="p-8 h-full flex flex-col print:p-6">
                 {pageIdx === 0 ? (
-                  <div className="text-center mb-4">
-                    <img src={SCHOOL_LOGO} alt="School Logo" className="h-16 mx-auto mb-1" />
-                    <h1 className="text-md font-bold text-black leading-tight">บัญชีรายชื่อนักเรียนและผลการประเมินกิจกรรมชุมนุม</h1>
-                    <h2 className="text-sm font-bold text-gray-800">ชื่อชุมนุม: {club.name} ({club.type})</h2>
-                    <p className="text-xs font-medium text-gray-700">โรงเรียนหนองบัวแดงวิทยา</p>
-                    <div className="mt-2 flex justify-center gap-8 text-[9px] font-bold border-y border-black py-1 mt-1">
-                      <p>ครูที่ปรึกษาหลัก: {advisor?.name || club.advisorId}</p>
-                      {coAdvisor && <p>ครูที่ปรึกษาร่วม: {coAdvisor.name}</p>}
+                  <div className="flex items-center justify-center gap-4 mb-4 border-b border-black pb-2">
+                    <img src={SCHOOL_LOGO} alt="School Logo" className="h-14 w-auto shrink-0" />
+                    <div className="text-center">
+                      <h1 className="text-sm font-bold text-black leading-tight">บัญชีรายชื่อนักเรียนและผลการประเมินกิจกรรมชุมนุม</h1>
+                      <h2 className="text-xs font-bold text-gray-800">ชื่อชุมนุม: {club.name} ({club.type})</h2>
+                      <p className="text-[10px] font-medium text-gray-700">โรงเรียนหนองบัวแดงวิทยา</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center mb-3 border-b border-black pb-1">
-                    <h1 className="text-sm font-bold">บัญชีรายชื่อนักเรียนชุมนุม {club.name} (ต่อ) หน้า {pageIdx + 1}</h1>
+                  <div className="text-center mb-2 border-b border-black pb-1">
+                    <h1 className="text-xs font-bold">บัญชีรายชื่อนักเรียนชุมนุม {club.name} (ต่อ) หน้า {pageIdx + 1}</h1>
+                  </div>
+                )}
+                
+                {pageIdx === 0 && (
+                  <div className="flex justify-center gap-8 text-[9px] font-bold mb-3 italic">
+                    <p>ครูที่ปรึกษาหลัก: {advisor?.name || club.advisorId}</p>
+                    {coAdvisor && <p>ครูที่ปรึกษาร่วม: {coAdvisor.name}</p>}
                   </div>
                 )}
 
                 <table className="w-full border-collapse border border-black text-xs mb-auto">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="border border-black p-1 w-10 text-center">ลำดับ</th>
-                      <th className="border border-black p-1 w-20 text-center">รหัสประจำตัว</th>
-                      <th className="border border-black p-1 text-left">ชื่อ-นามสกุล</th>
-                      <th className="border border-black p-1 w-14 text-center">ชั้น/ห้อง</th>
-                      <th className="border border-black p-1 w-20 text-center">ผลการประเมิน</th>
-                      <th className="border border-black p-1 w-24 text-center">หมายเหตุ</th>
+                      <th className="border border-black p-0.5 w-8 text-center text-[10px]">ลำดับ</th>
+                      <th className="border border-black p-0.5 w-20 text-center text-[10px]">รหัสประจำตัว</th>
+                      <th className="border border-black p-0.5 text-left text-[10px] px-2">ชื่อ-นามสกุล</th>
+                      <th className="border border-black p-0.5 w-14 text-center text-[10px]">ชั้น/ห้อง</th>
+                      <th className="border border-black p-0.5 w-20 text-center text-[10px]">ผลประเมิน</th>
+                      <th className="border border-black p-0.5 w-24 text-center text-[10px]">หมายเหตุ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {studentChunk.map((s, idx) => (
                       <tr key={s.id} className="h-7">
-                        <td className="border border-black p-0.5 text-center">{(pageIdx * pageSize) + idx + 1}</td>
-                        <td className="border border-black p-0.5 text-center font-mono">{s.id}</td>
-                        <td className="border border-black p-0.5 px-2 text-left">{s.name}</td>
-                        <td className="border border-black p-0.5 text-center">{s.level}/{s.room}</td>
-                        <td className="border border-black p-0.5 text-center font-bold">
+                        <td className="border border-black p-0.5 text-center text-[10px]">{(pageIdx * pageSize) + idx + 1}</td>
+                        <td className="border border-black p-0.5 text-center font-mono text-[10px]">{s.id}</td>
+                        <td className="border border-black p-0.5 px-2 text-left text-[10px]">{s.name}</td>
+                        <td className="border border-black p-0.5 text-center text-[10px]">{s.level}/{s.room}</td>
+                        <td className="border border-black p-0.5 text-center font-bold text-[10px]">
                           {s.grade === 'ผ' ? 'ผ่าน' : s.grade === 'มผ' ? 'ไม่ผ่าน' : '-'}
                         </td>
                         <td className="border border-black p-0.5"></td>
@@ -428,10 +433,10 @@ const App: React.FC = () => {
                 {pageIdx === pageCount - 1 && (
                   <div className="mt-4">
                     <div className="p-2 border border-black rounded-lg mb-4 print:rounded-none">
-                      <h4 className="font-bold text-[10px] mb-1 border-b border-black pb-0.5 flex items-center gap-2">
+                      <h4 className="font-bold text-[10px] mb-1 border-b border-black pb-0.5 flex items-center gap-2 uppercase tracking-tighter">
                         <FileText size={12} /> สรุปผลการดำเนินงาน
                       </h4>
-                      <div className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-[9px]">
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-[10px]">
                         <div className="flex justify-between border-b border-dotted border-gray-400">
                           <span>จำนวนนักเรียนทั้งหมด:</span>
                           <span className="font-bold">{stats.total} คน</span>
@@ -451,17 +456,17 @@ const App: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="mt-6 flex justify-around items-end">
+                    <div className="mt-4 flex justify-around items-end">
                       <div className="text-center">
-                        <div className="mb-5 border-b border-black w-44 mx-auto"></div>
-                        <p className="font-bold text-[9px]">(ลงชื่อ)......................................................</p>
+                        <div className="mb-4 border-b border-black w-40 mx-auto"></div>
+                        <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
                         <p className="mt-0.5 font-medium text-[9px]">ครูที่ปรึกษาหลัก</p>
                         <p className="text-[8px] text-gray-500">({advisor?.name || '........................................'})</p>
                       </div>
                       {coAdvisor && (
                         <div className="text-center">
-                          <div className="mb-5 border-b border-black w-44 mx-auto"></div>
-                          <p className="font-bold text-[9px]">(ลงชื่อ)......................................................</p>
+                          <div className="mb-4 border-b border-black w-40 mx-auto"></div>
+                          <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
                           <p className="mt-0.5 font-medium text-[9px]">ครูที่ปรึกษาร่วม</p>
                           <p className="text-[8px] text-gray-500">({coAdvisor.name})</p>
                         </div>
@@ -470,7 +475,7 @@ const App: React.FC = () => {
                   </div>
                 )}
                 
-                <div className="mt-auto pt-3 text-[7px] text-gray-400 italic text-right">
+                <div className="mt-auto pt-2 text-[7px] text-gray-400 italic text-right">
                   พิมพ์เมื่อ: {new Date().toLocaleDateString('th-TH')} {new Date().toLocaleTimeString('th-TH')}
                 </div>
               </div>
@@ -747,83 +752,86 @@ const App: React.FC = () => {
 
         <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <h3 className="text-lg font-bold flex items-center gap-2"><UserPen size={20} className="text-blue-500" /> จัดการข้อมูลครู</h3>
-            <div className="flex flex-wrap gap-2 w-full md:w-auto">
-              <div className="flex bg-gray-50 border rounded-lg overflow-hidden shrink-0">
-                <span className="bg-gray-200 p-2 text-gray-500"><Filter size={16} /></span>
+            <h3 className="text-lg font-bold flex items-center gap-2 text-blue-900"><UserPen size={22} /> จัดการข้อมูลครู</h3>
+            <div className="flex flex-wrap gap-2 w-full md:w-auto items-center">
+              <div className="flex bg-gray-50 border rounded-xl overflow-hidden shadow-inner h-10">
+                <span className="bg-gray-100 p-2.5 text-gray-400 border-r flex items-center"><Filter size={16} /></span>
                 <select 
-                  className="bg-transparent text-xs font-bold p-2 outline-none"
+                  className="bg-transparent text-xs font-bold px-3 py-1 outline-none text-gray-600"
                   value={adminFilterDept}
                   onChange={(e) => setAdminFilterDept(e.target.value)}
                 >
-                  <option value="ทั้งหมด">กลุ่มสาระทั้งหมด</option>
+                  <option value="ทั้งหมด">ทุกกลุ่มสาระ</option>
                   {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
-              <div className="flex bg-gray-50 border rounded-lg overflow-hidden flex-1 md:flex-none">
-                <span className="bg-gray-200 p-2 text-gray-500"><Search size={16} /></span>
+              <div className="flex bg-gray-50 border rounded-xl overflow-hidden shadow-inner flex-1 md:flex-none h-10">
+                <span className="bg-gray-100 p-2.5 text-gray-400 border-r flex items-center"><Search size={16} /></span>
                 <input 
                   type="text" 
-                  placeholder="ค้นหาชื่อชุมนุม..." 
-                  className="bg-transparent text-xs p-2 outline-none w-full"
+                  placeholder="ค้นหาชื่อชุมนุมที่ดูแล..." 
+                  className="bg-transparent text-xs px-3 py-1 outline-none w-full text-gray-600"
                   value={adminFilterClub}
                   onChange={(e) => setAdminFilterClub(e.target.value)}
                 />
               </div>
-              <button onClick={handleRegisterTeacherModal} className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow-sm hover:bg-green-700">
-                <PlusCircle size={14} /> เพิ่มครู
+              <button onClick={handleRegisterTeacherModal} className="bg-green-600 text-white px-4 h-10 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md hover:bg-green-700 transition-all active:scale-95">
+                <PlusCircle size={16} /> เพิ่มครู
               </button>
-              <button onClick={handleBulkRegisterTeacherModal} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-1 shadow-sm hover:bg-indigo-700">
-                <UserPlus size={14} /> เพิ่มครูหลายคน
+              <button onClick={handleBulkRegisterTeacherModal} className="bg-indigo-600 text-white px-4 h-10 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md hover:bg-indigo-700 transition-all active:scale-95">
+                <UserPlus size={16} /> เพิ่มครูหลายคน
               </button>
             </div>
           </div>
           
-          <div className="overflow-x-auto rounded-xl border">
+          <div className="overflow-x-auto rounded-xl border border-gray-100">
             <table className="w-full text-sm text-left">
-              <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-500 tracking-wider">
+              <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b">
                 <tr>
-                  <th className="p-4 border-b">รหัสครู</th>
-                  <th className="p-4 border-b">ชื่อ-สกุล / กลุ่มสาระ</th>
-                  <th className="p-4 border-b">ชุมนุมที่ดูแล</th>
-                  <th className="p-4 border-b text-center">
+                  <th className="p-4 w-20 text-center">รหัส</th>
+                  <th className="p-4">ชื่อ-นามสกุล</th>
+                  <th className="p-4">กลุ่มสาระ</th>
+                  <th className="p-4">ชุมนุมที่รับผิดชอบ</th>
+                  <th className="p-4 text-center">
                     <button 
                       onClick={() => setAdminSortOrder(adminSortOrder === 'desc' ? 'asc' : 'desc')}
                       className="flex items-center gap-1 mx-auto hover:text-blue-600 transition-colors"
                     >
                       นร. ทั้งหมด
-                      {adminSortOrder === 'asc' ? <ArrowUpNarrowWide size={12}/> : <ArrowDownWideNarrow size={12}/>}
+                      {adminSortOrder === 'asc' ? <ArrowUpNarrowWide size={14}/> : <ArrowDownWideNarrow size={14}/>}
                     </button>
                   </th>
-                  <th className="p-4 border-b text-right">จัดการ</th>
+                  <th className="p-4 text-right">จัดการ</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-gray-50">
                 {filteredAndSortedTeachers.length === 0 ? (
-                  <tr><td colSpan={5} className="p-10 text-center text-gray-400">ไม่พบข้อมูลครูตามตัวกรอง</td></tr>
+                  <tr><td colSpan={6} className="p-16 text-center text-gray-400 italic">ไม่พบข้อมูลครูที่ตรงตามเงื่อนไข</td></tr>
                 ) : filteredAndSortedTeachers.map(t => (
-                  <tr key={t.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="p-4 font-mono text-xs font-bold text-gray-400">{t.id}</td>
-                    <td className="p-4">
-                      <div className="font-bold text-gray-800">{t.name}</div>
-                      <div className="text-[10px] text-blue-500 font-bold">{t.department}</div>
-                    </td>
+                  <tr key={t.id} className="hover:bg-blue-50/30 transition-colors group">
+                    <td className="p-4 text-center font-mono text-xs font-bold text-gray-400 group-hover:text-blue-500">{t.id}</td>
+                    <td className="p-4 font-bold text-gray-800">{t.name}</td>
+                    <td className="p-4 text-xs font-medium text-gray-500">{t.department}</td>
                     <td className="p-4">
                       {t.tClubs.length === 0 ? (
-                        <span className="text-[10px] text-gray-300 italic">ไม่มีชุมนุม</span>
-                      ) : t.tClubs.map(c => (
-                        <div key={c.id} className="text-[10px] text-indigo-600 font-bold mb-0.5">• {c.name}</div>
-                      ))}
+                        <span className="text-[10px] text-gray-300 italic">ยังไม่มีชุมนุม</span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {t.tClubs.map(c => (
+                            <span key={c.id} className="text-[9px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-100 font-bold">{c.name}</span>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td className="p-4 text-center">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-black ${t.tRegTotal > 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'}`}>
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black ${t.tRegTotal > 0 ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-gray-100 text-gray-400'}`}>
                         {t.tRegTotal} คน
                       </span>
                     </td>
                     <td className="p-4 text-right">
-                      <div className="flex justify-end gap-1">
-                        <button onClick={() => handleEditTeacherModal(t)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"><Pencil size={14}/></button>
-                        <button onClick={() => handleDeleteTeacher(t.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"><XCircle size={14}/></button>
+                      <div className="flex justify-end gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => handleEditTeacherModal(t)} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors" title="แก้ไข"><Pencil size={16}/></button>
+                        <button onClick={() => handleDeleteTeacher(t.id)} className="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors" title="ลบ"><XCircle size={16}/></button>
                       </div>
                     </td>
                   </tr>
@@ -840,13 +848,14 @@ const App: React.FC = () => {
     const { value: formValues } = await Swal.fire({
       title: 'ลงทะเบียนครูใหม่', 
       html: `
-        <div class="text-left space-y-3 p-1">
-          <div><label class="text-[10px] font-black uppercase text-gray-400">รหัสครู 4 หลัก</label><input id="t-id" class="w-full border p-2.5 rounded-lg text-sm" placeholder="เช่น T001"></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">ชื่อ-นามสกุล</label><input id="t-name" class="w-full border p-2.5 rounded-lg text-sm" placeholder="ระบุชื่อ-นามสกุล"></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">กลุ่มสาระการเรียนรู้</label><select id="t-dept" class="w-full border p-2.5 rounded-lg text-sm">${DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('')}</select></div>
+        <div class="text-left space-y-4 p-1">
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">รหัสครู 4 หลัก</label><input id="t-id" class="w-full border p-3 rounded-xl text-sm shadow-inner" placeholder="เช่น t123"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">ชื่อ-นามสกุล</label><input id="t-name" class="w-full border p-3 rounded-xl text-sm shadow-inner" placeholder="ไม่ต้องใส่คำนำหน้า"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">กลุ่มสาระการเรียนรู้</label><select id="t-dept" class="w-full border p-3 rounded-xl text-sm shadow-inner">${DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('')}</select></div>
         </div>`, 
       showCancelButton: true, 
       confirmButtonText: 'บันทึกข้อมูล',
+      confirmButtonColor: '#059669',
       cancelButtonText: 'ยกเลิก',
       preConfirm: () => {
         const id = (document.getElementById('t-id') as HTMLInputElement).value.trim();
@@ -862,30 +871,42 @@ const App: React.FC = () => {
     const { value: bulkText } = await Swal.fire({
       title: 'เพิ่มครูหลายคน', 
       html: `
-        <div class="text-left space-y-3 p-1">
-          <p class="text-[10px] text-blue-500 font-bold bg-blue-50 p-3 rounded-lg border border-blue-100">
-            รูปแบบ: รหัสครู,ชื่อ-นามสกุล,กลุ่มสาระ (บรรทัดละ 1 คน)<br/>
-            ตัวอย่าง: t001, นายสมชาย ใจดี, คณิตศาสตร์
-          </p>
-          <textarea id="bulk-t" class="w-full h-48 border p-3 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="t001,นาย ก,ศิลปะ"></textarea>
+        <div class="text-left space-y-4 p-1">
+          <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+            <h4 class="text-[10px] font-black text-indigo-800 uppercase mb-2 flex items-center gap-1.5"><Info size={12}/> รูปแบบการนำเข้าข้อมูล</h4>
+            <p class="text-[10px] text-indigo-600 font-medium leading-relaxed">
+              รหัสครู, ชื่อ-นามสกุล, กลุ่มสาระ <br/>
+              <b>ตัวอย่าง:</b> t001, นายสมชาย ใจดี, คณิตศาสตร์ <br/>
+              * บรรทัดละ 1 คน ชื่อกลุ่มสาระต้องตรงกับในระบบ
+            </p>
+          </div>
+          <textarea id="bulk-t" class="w-full h-56 border p-4 rounded-2xl text-xs font-mono focus:ring-4 focus:ring-indigo-100 outline-none shadow-inner bg-gray-50/50" placeholder="คัดลอกข้อมูลมาวางที่นี่..."></textarea>
         </div>`, 
       showCancelButton: true, 
-      confirmButtonText: 'นำเข้าข้อมูล',
+      confirmButtonText: 'นำเข้าข้อมูลครู',
+      confirmButtonColor: '#4f46e5',
       cancelButtonText: 'ยกเลิก',
-      width: '600px',
+      width: '650px',
       preConfirm: () => {
         const text = (document.getElementById('bulk-t') as HTMLTextAreaElement).value;
-        return text.split('\n')
+        const result = text.split('\n')
           .filter(line => line.trim() !== "")
           .map(line => { 
-            const [id, name, dept] = line.split(',').map(s => s.trim()); 
+            const parts = line.split(',').map(s => s.trim());
+            if (parts.length < 3) return null;
+            const [id, name, dept] = parts; 
             return { id, name, department: dept }; 
           })
-          .filter(t => t.id && t.name && DEPARTMENTS.includes(t.department))
+          .filter(t => t && t.id && t.name && DEPARTMENTS.includes(t.department));
+        
+        if (result.length === 0 && text.trim() !== "") {
+          Swal.showValidationMessage('ไม่พบข้อมูลที่ถูกต้องตามรูปแบบที่กำหนด');
+          return false;
+        }
+        return result;
       }
     });
-    if (bulkText && bulkText.length > 0) handleBulkAddTeachers(bulkText);
-    else if (bulkText) Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาตรวจสอบรูปแบบข้อมูล หรือชื่อกลุ่มสาระให้ถูกต้อง', 'error');
+    if (bulkText && bulkText.length > 0) handleBulkAddTeachers(bulkText as Teacher[]);
   };
 
   const handleEditTeacherModal = async (teacher: Teacher) => {
@@ -893,12 +914,13 @@ const App: React.FC = () => {
       title: 'แก้ไขข้อมูลครู', 
       html: `
         <div class="text-left space-y-3 p-1">
-          <div><label class="text-[10px] font-black uppercase text-gray-400">รหัสครู</label><input id="t-id" class="w-full border p-2.5 rounded-lg text-sm" value="${teacher.id}"></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">ชื่อ-นามสกุล</label><input id="t-name" class="w-full border p-2.5 rounded-lg text-sm" value="${teacher.name}"></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">กลุ่มสาระ</label><select id="t-dept" class="w-full border p-2.5 rounded-lg text-sm">${DEPARTMENTS.map(d => `<option value="${d}" ${teacher.department === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 block mb-1">รหัสครู</label><input id="t-id" class="w-full border p-3 rounded-xl text-sm bg-gray-50" value="${teacher.id}" readonly></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 block mb-1">ชื่อ-นามสกุล</label><input id="t-name" class="w-full border p-3 rounded-xl text-sm" value="${teacher.name}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 block mb-1">กลุ่มสาระ</label><select id="t-dept" class="w-full border p-3 rounded-xl text-sm">${DEPARTMENTS.map(d => `<option value="${d}" ${teacher.department === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
         </div>`, 
       showCancelButton: true, 
       confirmButtonText: 'อัปเดตข้อมูล',
+      confirmButtonColor: '#2563eb',
       preConfirm: () => ({ 
         id: (document.getElementById('t-id') as HTMLInputElement).value.trim(), 
         name: (document.getElementById('t-name') as HTMLInputElement).value.trim(), 
@@ -912,43 +934,51 @@ const App: React.FC = () => {
     Swal.fire({
       title: 'สร้างชุมนุมใหม่', 
       html: `
-        <div class="text-left space-y-3 p-1">
-          <div><label class="text-[10px] font-black uppercase text-gray-400">ชื่อชุมนุม</label><input id="c-name" class="w-full border p-2.5 rounded-lg text-sm"></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">ประเภท</label><select id="c-type" class="w-full border p-2.5 rounded-lg text-sm">${Object.values(ClubType).map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">ระดับที่รับ</label><select id="c-target" class="w-full border p-2.5 rounded-lg text-sm">${Object.values(LevelCategory).map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">สถานที่เรียน</label><input id="c-loc" class="w-full border p-2.5 rounded-lg text-sm" placeholder="ระบุห้องเรียน หรือสนาม"></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">รายละเอียดเพิ่มเติม (ถ้ามี)</label><textarea id="c-desc" class="w-full border p-2.5 rounded-lg text-sm h-20" placeholder="ระบุรายละเอียดสั้นๆ"></textarea></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">รหัสครูที่ปรึกษาร่วม (ถ้ามี)</label><input id="c-co" class="w-full border p-2.5 rounded-lg text-sm" placeholder="ระบุรหัส 4 หลัก"></div>
+        <div class="text-left space-y-4 p-1">
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">ชื่อชุมนุม</label><input id="c-name" class="w-full border p-3 rounded-xl text-sm" placeholder="ระบุชื่อชุมนุม"></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">ประเภท</label><select id="c-type" class="w-full border p-3 rounded-xl text-sm">${Object.values(ClubType).map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+            <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">ระดับชั้น</label><select id="c-target" class="w-full border p-3 rounded-xl text-sm">${Object.values(LevelCategory).map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+          </div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">สถานที่เรียน / ห้องเรียน</label><input id="c-loc" class="w-full border p-3 rounded-xl text-sm" placeholder="เช่น ห้อง 111 หรือ สนามฟุตบอล"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">รายละเอียด / คำอธิบายสั้นๆ</label><textarea id="c-desc" class="w-full border p-3 rounded-xl text-sm h-24" placeholder="ระบุสิ่งที่นักเรียนจะได้เรียนรู้ หรือคุณสมบัติผู้สมัคร"></textarea></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">รหัสครูที่ปรึกษาร่วม (ถ้ามี)</label><input id="c-co" class="w-full border p-3 rounded-xl text-sm" placeholder="ระบุรหัส 4 หลัก"></div>
         </div>`, 
       showCancelButton: true, 
-      confirmButtonText: 'สร้างชุมนุม',
-      preConfirm: () => ({ 
-        name: (document.getElementById('c-name') as HTMLInputElement).value.trim(), 
-        type: (document.getElementById('c-type') as HTMLSelectElement).value, 
-        levelTarget: (document.getElementById('c-target') as HTMLSelectElement).value, 
-        location: (document.getElementById('c-loc') as HTMLInputElement).value, 
-        advisorId: teacher.id, 
-        coAdvisorId: (document.getElementById('c-co') as HTMLInputElement).value.trim() || undefined,
-        capacity: 25, 
-        description: (document.getElementById('c-desc') as HTMLTextAreaElement).value.trim(), 
-        phone: '' 
-      })
+      confirmButtonText: 'ยืนยันสร้างชุมนุม',
+      confirmButtonColor: '#059669',
+      preConfirm: () => {
+        const name = (document.getElementById('c-name') as HTMLInputElement).value.trim();
+        if(!name) { Swal.showValidationMessage('กรุณาระบุชื่อชุมนุม'); return false; }
+        return { 
+          name, 
+          type: (document.getElementById('c-type') as HTMLSelectElement).value, 
+          levelTarget: (document.getElementById('c-target') as HTMLSelectElement).value, 
+          location: (document.getElementById('c-loc') as HTMLInputElement).value, 
+          advisorId: teacher.id, 
+          coAdvisorId: (document.getElementById('c-co') as HTMLInputElement).value.trim() || undefined,
+          capacity: 25, 
+          description: (document.getElementById('c-desc') as HTMLTextAreaElement).value.trim(), 
+          phone: '' 
+        }
+      }
     }).then(res => { if (res.isConfirmed) handleCreateClub(res.value); });
   };
 
   const openUpdateClubModal = (club: Club, teacher: Teacher) => {
     Swal.fire({
-      title: 'แก้ไขชุมนุม', 
+      title: 'แก้ไขข้อมูลชุมนุม', 
       html: `
-        <div class="text-left space-y-3 p-1">
-          <div><label class="text-[10px] font-black uppercase text-gray-400">ชื่อชุมนุม</label><input id="c-name" class="w-full border p-2.5 rounded-lg text-sm" value="${club.name}"></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">สถานที่</label><input id="c-loc" class="w-full border p-2.5 rounded-lg text-sm" value="${club.location}"></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">รายละเอียด</label><textarea id="c-desc" class="w-full border p-2.5 rounded-lg text-sm h-20">${club.description || ''}</textarea></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">รหัสครูที่ปรึกษาร่วม</label><input id="c-co" class="w-full border p-2.5 rounded-lg text-sm" value="${club.coAdvisorId || ''}"></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">จำนวนที่รับสมัคร</label><input id="c-cap" type="number" class="w-full border p-2.5 rounded-lg text-sm" value="${club.capacity}"></div>
+        <div class="text-left space-y-4 p-1">
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">ชื่อชุมนุม</label><input id="c-name" class="w-full border p-3 rounded-xl text-sm font-bold" value="${club.name}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">สถานที่เรียน</label><input id="c-loc" class="w-full border p-3 rounded-xl text-sm" value="${club.location}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">คำอธิบาย</label><textarea id="c-desc" class="w-full border p-3 rounded-xl text-sm h-24">${club.description || ''}</textarea></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">รหัสครูที่ปรึกษาร่วม</label><input id="c-co" class="w-full border p-3 rounded-xl text-sm" value="${club.coAdvisorId || ''}" placeholder="ระบุรหัส 4 หลัก"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 mb-1 block">จำนวนรับสมัคร (คน)</label><input id="c-cap" type="number" class="w-full border p-3 rounded-xl text-sm" value="${club.capacity}"></div>
         </div>`, 
       showCancelButton: true, 
-      confirmButtonText: 'บันทึกการแก้ไข',
+      confirmButtonText: 'บันทึกการเปลี่ยนแปลง',
+      confirmButtonColor: '#2563eb',
       preConfirm: () => ({ 
         ...club, 
         name: (document.getElementById('c-name') as HTMLInputElement).value.trim(), 
@@ -963,14 +993,14 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col selection:bg-blue-100 selection:text-blue-900">
       <style>{`
-        /* A4 Preview Styles */
+        /* A4 Preview Screen Styles */
         .a4-page {
           width: 210mm;
           min-height: 297mm;
           background: white;
           margin: 0 auto;
           box-sizing: border-box;
-          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
           border-radius: 4px;
         }
 
@@ -981,7 +1011,6 @@ const App: React.FC = () => {
             margin: 0; 
           }
           
-          /* ซ่อนทุกอย่างยกเว้นส่วนรายงาน */
           body > #root > header,
           body > #root > main,
           body > #root > footer {
@@ -1031,7 +1060,7 @@ const App: React.FC = () => {
             width: 210mm !important;
             height: 297mm !important;
             min-height: 297mm !important;
-            padding: 5mm !important; /* ลดระยะขอบแผ่นลงอีก */
+            padding: 4mm !important; /* Minimal margins for maximum space */
             margin: 0 !important;
             page-break-after: always !important;
             box-shadow: none !important;
@@ -1089,47 +1118,47 @@ const ClubCard = ({ club, students, teachers, onRegister, disabled }: any) => {
   
   return (
     <div className="group rounded-2xl border-2 transition-all overflow-hidden flex flex-col h-full hover:shadow-xl bg-white border-gray-100">
-      <div className="p-6 flex-1">
+      <div className="p-6 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-4">
-          <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase ${badgeColor}`}>{club.type}</span>
-          {isFull && <span className="text-red-600 font-bold text-sm">เต็ม</span>}
+          <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider ${badgeColor}`}>{club.type}</span>
+          {isFull && <span className="bg-red-500 text-white font-black text-[10px] px-2 py-1 rounded uppercase animate-pulse">เต็มแล้ว</span>}
         </div>
-        <h3 className="text-xl font-bold text-gray-800 mb-1">{club.name}</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-1 leading-tight group-hover:text-blue-900 transition-colors">{club.name}</h3>
         
         {/* รายละเอียดเพิ่มเติม */}
         {club.description && (
-          <div className="flex items-start gap-1.5 mb-3 text-xs text-gray-600 italic">
-            <Info size={14} className="mt-0.5 shrink-0" />
-            <p className="line-clamp-3">{club.description}</p>
+          <div className="flex items-start gap-1.5 my-3 text-xs text-gray-500 bg-gray-50 p-3 rounded-xl border border-dashed">
+            <Info size={14} className="mt-0.5 shrink-0 text-blue-400" />
+            <p className="line-clamp-3 leading-relaxed">{club.description}</p>
           </div>
         )}
 
         {/* ข้อมูลครูที่ปรึกษา */}
-        <div className="space-y-1 mb-6 border-t pt-3 mt-auto">
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="space-y-1.5 mb-6 mt-auto pt-4 border-t border-gray-50">
+          <div className="flex items-center gap-2 text-xs text-gray-600">
             <UserPen size={14} className="text-blue-500 shrink-0" />
-            <span>ครูที่ปรึกษา: <b>{advisor?.name || '-'}</b></span>
+            <span>ครูที่ปรึกษาหลัก: <b>{advisor?.name || '-'}</b></span>
           </div>
           {coAdvisor && (
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <Users size={14} className="text-blue-500 shrink-0" />
+            <div className="flex items-center gap-2 text-xs text-gray-600">
+              <Users size={14} className="text-indigo-500 shrink-0" />
               <span>ครูที่ปรึกษาร่วม: <b>{coAdvisor.name}</b></span>
             </div>
           )}
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <MapPinned size={14} className="text-blue-500 shrink-0" />
-            <span>สถานที่: <b>{club.location}</b></span>
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <MapPinned size={14} className="text-orange-400 shrink-0" />
+            <span>สถานที่เรียน: <b>{club.location}</b></span>
           </div>
         </div>
 
         <div>
-          <div className="flex justify-between text-[10px] mb-1.5 font-bold uppercase text-gray-400">
-            <span>ความจุ</span>
-            <span>{count} / {club.capacity}</span>
+          <div className="flex justify-between text-[10px] mb-1.5 font-black uppercase text-gray-400 tracking-widest">
+            <span>ความจุที่เปิดรับ</span>
+            <span className={isFull ? 'text-red-500' : 'text-blue-600'}>{count} / {club.capacity}</span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden shadow-inner">
             <div 
-              className={`h-full transition-all ${isFull ? 'bg-red-500' : percent > 80 ? 'bg-orange-500' : 'bg-green-500'}`} 
+              className={`h-full transition-all duration-700 ${isFull ? 'bg-red-500' : percent > 80 ? 'bg-orange-500' : 'bg-green-500'}`} 
               style={{ width: `${Math.min(100, percent)}%` }} 
             />
           </div>
@@ -1138,9 +1167,9 @@ const ClubCard = ({ club, students, teachers, onRegister, disabled }: any) => {
       <button 
         disabled={disabled || isFull} 
         onClick={onRegister} 
-        className={`w-full py-4 text-center font-bold text-sm ${isFull || disabled ? 'bg-gray-100 text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 transition-colors'}`}
+        className={`w-full py-4 text-center font-bold text-sm tracking-wide transition-all active:scale-95 ${isFull || disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-inner'}`}
       >
-        {isFull ? 'เต็มแล้ว' : 'สมัครชุมนุม'}
+        {isFull ? 'สมัครไม่ได้เนื่องจากสมาชิกเต็ม' : 'กดปุ่มเพื่อสมัครชุมนุมนี้'}
       </button>
     </div>
   );
@@ -1154,11 +1183,11 @@ const ClubManagementCard = ({ club, students, teachers, isLeadAdvisor, onUpdate,
       title: 'แก้ไขข้อมูลนักเรียน', 
       html: `
         <div class="text-left space-y-3 p-1">
-          <div><label class="text-[10px] font-black uppercase text-gray-400">ชื่อ-นามสกุล</label><input id="s-name" class="w-full border p-2.5 rounded-lg text-sm" value="${student.name}"></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400">เลขที่</label><input id="s-seat" type="number" class="w-full border p-2.5 rounded-lg text-sm" value="${student.seatNumber}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 block mb-1">ชื่อ-นามสกุล</label><input id="s-name" class="w-full border p-3 rounded-xl text-sm shadow-inner" value="${student.name}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 block mb-1">เลขที่</label><input id="s-seat" type="number" class="w-full border p-3 rounded-xl text-sm shadow-inner" value="${student.seatNumber}"></div>
         </div>`, 
       showCancelButton: true, 
-      confirmButtonText: 'บันทึก',
+      confirmButtonText: 'บันทึกการแก้ไข',
       preConfirm: () => ({ 
         name: (document.getElementById('s-name') as HTMLInputElement).value.trim(), 
         seatNumber: (document.getElementById('s-seat') as HTMLInputElement).value 
@@ -1171,61 +1200,63 @@ const ClubManagementCard = ({ club, students, teachers, isLeadAdvisor, onUpdate,
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="bg-slate-50 p-6 flex justify-between items-center border-b gap-4">
         <div>
-          <h4 className="text-2xl font-bold text-blue-900">{club.name}</h4>
-          <div className="text-xs font-bold text-gray-500">สถานที่: {club.location} | จำนวน {clubStudents.length} / {club.capacity}</div>
+          <h4 className="text-2xl font-bold text-blue-900 leading-tight">{club.name}</h4>
+          <div className="text-xs font-bold text-gray-400 uppercase tracking-tighter mt-1">สถานที่: {club.location} | จำนวน {clubStudents.length} / {club.capacity}</div>
         </div>
         <div className="flex gap-2">
           {isLeadAdvisor && (
             <>
-              <button onClick={() => onUpdate(club)} className="bg-white border text-gray-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-gray-50 transition-colors">แก้ไขชุมนุม</button>
-              <button onClick={onDelete} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors">ลบชุมนุม</button>
+              <button onClick={() => onUpdate(club)} className="bg-white border text-gray-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-gray-100 transition-colors">ตั้งค่าชุมนุม</button>
+              <button onClick={onDelete} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors">ลบข้อมูล</button>
             </>
           )}
         </div>
       </div>
       <div className="p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <h5 className="font-bold flex items-center gap-2 text-gray-700"><Users size={18} /> รายชื่อนักเรียนในชุมนุม</h5>
-          <button onClick={onPrint} className="bg-gray-800 text-white px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg active:scale-95 hover:bg-gray-900 transition-all">
-            <Printer size={16} /> พิมพ์รายงาน / PDF
+          <h5 className="font-black text-gray-700 uppercase tracking-widest text-sm flex items-center gap-2"><Users size={18} className="text-indigo-500" /> สมาชิกในชุมนุม</h5>
+          <button onClick={onPrint} className="bg-gray-800 text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center gap-2 shadow-xl active:scale-95 hover:bg-black transition-all">
+            <Printer size={16} /> พิมพ์รายงานผลการประเมิน (PDF)
           </button>
         </div>
-        <div className="overflow-x-auto rounded-xl border">
+        <div className="overflow-x-auto rounded-2xl border border-gray-100 shadow-inner">
           <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-500 tracking-wider">
+            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-500 tracking-widest">
               <tr>
-                <th className="p-4 border-b text-center w-16">รหัส</th>
-                <th className="p-4 border-b">ชื่อ-สกุล / ข้อมูลชั้นเรียน</th>
-                <th className="p-4 border-b text-center">ผลประเมิน</th>
+                <th className="p-4 border-b text-center w-20">รหัส นร.</th>
+                <th className="p-4 border-b">ชื่อ-สกุล / ชั้นเรียน</th>
+                <th className="p-4 border-b text-center">การประเมิน</th>
                 <th className="p-4 border-b text-right">จัดการ</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-gray-50">
               {clubStudents.length === 0 ? (
-                <tr><td colSpan={4} className="p-10 text-center text-gray-400 italic">ยังไม่มีนักเรียนสมัครชุมนุมนี้</td></tr>
+                <tr><td colSpan={4} className="p-16 text-center text-gray-300 italic">ยังไม่มีนักเรียนสมัครเข้าเรียนในชุมนุมนี้</td></tr>
               ) : clubStudents.map((s: Student) => (
-                <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={s.id} className="hover:bg-blue-50/20 transition-colors group">
                   <td className="p-4 text-center font-mono font-bold text-blue-600">{s.id}</td>
                   <td className="p-4">
                     <div className="font-bold text-gray-800">{s.name}</div>
                     <div className="text-[10px] text-gray-400 font-bold uppercase">{s.level}/{s.room} • เลขที่ {s.seatNumber}</div>
                   </td>
                   <td className="p-4 text-center">
-                    <div className="flex justify-center gap-1.5">
+                    <div className="flex justify-center gap-2">
                       <button 
                         onClick={() => onGradeUpdate(s.id, 'ผ')} 
-                        className={`px-3 py-1 rounded-full text-[10px] font-black transition-all ${s.grade === 'ผ' ? 'bg-green-600 text-white shadow-md scale-110' : 'bg-gray-100 text-gray-400 hover:bg-green-50 hover:text-green-600'}`}
+                        className={`w-10 h-8 rounded-lg text-xs font-black transition-all ${s.grade === 'ผ' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-400 hover:bg-green-50 hover:text-green-600'}`}
+                        title="ให้ผ่าน (ผ)"
                       >ผ</button>
                       <button 
                         onClick={() => onGradeUpdate(s.id, 'มผ')} 
-                        className={`px-3 py-1 rounded-full text-[10px] font-black transition-all ${s.grade === 'มผ' ? 'bg-red-600 text-white shadow-md scale-110' : 'bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-600'}`}
+                        className={`w-10 h-8 rounded-lg text-xs font-black transition-all ${s.grade === 'มผ' ? 'bg-red-600 text-white shadow-md' : 'bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-600'}`}
+                        title="ไม่ผ่าน (มผ)"
                       >มผ</button>
                     </div>
                   </td>
                   <td className="p-4 text-right">
-                    <div className="flex justify-end gap-1">
-                      <button onClick={() => handleEditStudent(s)} className="p-2 text-blue-500 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"><Pencil size={16}/></button>
-                      <button onClick={() => onStudentDelete(s.id)} className="p-2 text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"><XCircle size={16}/></button>
+                    <div className="flex justify-end gap-1 opacity-20 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => handleEditStudent(s)} className="p-2 text-blue-500 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"><Pencil size={18}/></button>
+                      <button onClick={() => onStudentDelete(s.id)} className="p-2 text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"><XCircle size={18}/></button>
                     </div>
                   </td>
                 </tr>
