@@ -666,17 +666,15 @@ const App: React.FC = () => {
 
                     <div className="mt-4 flex justify-around items-end">
                       <div className="text-center">
-                        <div className="mb-4 border-b border-black w-40 mx-auto"></div>
-                        <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
-                        <p className="mt-0.5 font-medium text-[9px]">ครูที่ปรึกษาหลัก</p>
-                        <p className="text-[8px] text-gray-500">({advisor?.name || '........................................'})</p>
+                        <p className="font-bold text-[10px] mb-4">(ลงชื่อ)......................................................</p>
+                        <p className="text-[10px] font-bold">({advisor?.name || '........................................'})</p>
+                        <p className="mt-0.5 font-medium text-[9px]">ครูที่ปรึกษา</p>
                       </div>
                       {coAdvisor && (
                         <div className="text-center">
-                          <div className="mb-4 border-b border-black w-40 mx-auto"></div>
-                          <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
+                          <p className="font-bold text-[10px] mb-4">(ลงชื่อ)......................................................</p>
+                          <p className="text-[10px] font-bold">({coAdvisor.name})</p>
                           <p className="mt-0.5 font-medium text-[9px]">ครูที่ปรึกษาร่วม</p>
-                          <p className="text-[8px] text-gray-500">({coAdvisor.name})</p>
                         </div>
                       )}
                     </div>
