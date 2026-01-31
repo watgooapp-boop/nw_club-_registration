@@ -432,7 +432,7 @@ const App: React.FC = () => {
 
   // --- Teacher Print Preview Overlay Component ---
   const TeacherPrintPreviewOverlay = ({ teachersList, onClose }: { teachersList: any[], onClose: () => void }) => {
-    const pageSize = 18; // ลดลงเพื่อให้เหลือที่สำหรับส่วนลงชื่อ
+    const pageSize = 20; // ปรับกลับเป็น 20 ตามที่ผู้ใช้ต้องการ
     const pageCount = Math.max(1, Math.ceil(teachersList.length / pageSize));
     const pages = Array.from({ length: pageCount }, (_, i) => teachersList.slice(i * pageSize, (i + 1) * pageSize));
 
@@ -550,7 +550,7 @@ const App: React.FC = () => {
       pending: clubStudents.filter(s => s.grade === null).length
     };
 
-    const pageSize = 20; // ลดลงเพื่อให้เหลือที่สำหรับส่วนสรุปและส่วนลงชื่อ
+    const pageSize = 25; // ปรับกลับเป็น 25 ตามเดิมที่ผู้ใช้ต้องการ
     const pageCount = Math.max(1, Math.ceil(clubStudents.length / pageSize));
     const pages = Array.from({ length: pageCount }, (_, i) => clubStudents.slice(i * pageSize, (i + 1) * pageSize));
 
@@ -1307,24 +1307,28 @@ const App: React.FC = () => {
         /* A4 Preview Screen Styles */
         .a4-page {
           width: 210mm;
+          height: 297mm;
           min-height: 297mm;
           background: white;
           margin: 0 auto;
           box-sizing: border-box;
           box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
           border-radius: 4px;
+          overflow: hidden;
         }
 
-        /* Improved Print Styles */
+        /* Ultimate Robust Print Styles */
         @media print {
           @page { 
             size: A4; 
-            margin: 10mm; 
+            margin: 0; 
           }
           
-          body > #root > header,
-          body > #root > main,
-          body > #root > footer {
+          /* Hide EVERYTHING in the normal app flow */
+          body > #root > div > header,
+          body > #root > div > main,
+          body > #root > div > footer,
+          .swal2-container {
             display: none !important;
           }
 
@@ -1337,50 +1341,51 @@ const App: React.FC = () => {
 
           #root {
             height: auto !important;
-            overflow: visible !important;
           }
 
+          /* Show only the overlay content, but make it take over the flow */
           .no-print-backdrop {
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
-            width: 100% !important;
+            width: 210mm !important;
             background: white !important;
             display: block !important;
             padding: 0 !important;
             margin: 0 !important;
             overflow: visible !important;
             backdrop-filter: none !important;
-            z-index: 10000 !important;
-            visibility: visible !important;
+            z-index: 100000 !important;
           }
 
           #print-content {
             display: block !important;
-            width: 100% !important;
-            background: white !important;
-            visibility: visible !important;
+            width: 210mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
 
           .a4-page {
-            width: 100% !important;
-            height: auto !important;
-            min-height: 0 !important;
-            padding: 0 !important;
+            width: 210mm !important;
+            height: 297mm !important;
+            min-height: 297mm !important;
+            padding: 10mm !important; /* Proper margin for printing */
             margin: 0 !important;
             box-shadow: none !important;
             border: none !important;
-            box-sizing: border-box !important;
-            display: block !important;
+            display: flex !important;
+            flex-direction: column !important;
             position: relative !important;
-            visibility: visible !important;
-            break-after: page !important;
             page-break-after: always !important;
+            break-after: page !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
           }
 
+          /* Prevent extra page if last child */
           .a4-page:last-child {
-            break-after: auto !important;
             page-break-after: auto !important;
+            break-after: auto !important;
           }
 
           * {
@@ -1391,7 +1396,6 @@ const App: React.FC = () => {
 
           table, th, td {
             border-color: black !important;
-            visibility: visible !important;
           }
         }
 
