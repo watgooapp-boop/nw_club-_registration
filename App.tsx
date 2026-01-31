@@ -351,7 +351,7 @@ const App: React.FC = () => {
 
         <div id="print-content" className="flex flex-col gap-0 bg-transparent">
           {pages.map((studentChunk, pageIdx) => (
-            <div key={pageIdx} className="a4-page bg-white relative shadow-2xl overflow-hidden mb-10 print:mb-0 print:shadow-none">
+            <div key={pageIdx} className="a4-page bg-white relative overflow-hidden mb-10 print:mb-0 shadow-2xl print:shadow-none">
               <div className="absolute top-10 right-12 text-[10px] text-gray-400 font-bold print:top-6 print:right-10">
                 หน้า {pageIdx + 1} / {pageCount}
               </div>
@@ -558,21 +558,21 @@ const App: React.FC = () => {
 
       <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <h2 className="text-xl font-bold flex items-center gap-2">
+          <h2 className="text-xl font-bold flex items-center gap-2 text-purple-900">
             <BarChart3 className="text-purple-500" />
             อันดับชุมนุมยอดนิยม
           </h2>
-          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border">
+          <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border">
             <label className="text-xs font-bold text-gray-400 uppercase">แสดงผล:</label>
             <select 
-              className="text-sm font-bold bg-transparent outline-none focus:ring-0 cursor-pointer"
+              className="text-sm font-bold bg-transparent outline-none cursor-pointer text-purple-700"
               value={popularLimit}
               onChange={(e) => setPopularLimit(parseInt(e.target.value))}
             >
-              <option value="5">5 อันดับ</option>
-              <option value="10">10 อันดับ</option>
-              <option value="20">20 อันดับ</option>
-              <option value="-1">ทั้งหมด</option>
+              <option value="5">5 อันดับแรก</option>
+              <option value="10">10 อันดับแรก</option>
+              <option value="20">20 อันดับแรก</option>
+              <option value="-1">ชุมนุมทั้งหมด</option>
             </select>
           </div>
         </div>
@@ -580,35 +580,42 @@ const App: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest border-b">
-                <th className="p-4 w-16">อันดับ</th>
+                <th className="p-4 w-16 text-center">#</th>
                 <th className="p-4">ชื่อชุมนุม</th>
+                <th className="p-4">ประเภท</th>
                 <th className="p-4 text-center">นักเรียน / แผนรับ</th>
-                <th className="p-4 w-40">สถานะความเต็ม</th>
+                <th className="p-4 w-40 text-center">สถานะ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {popularClubs.map((club, idx) => (
-                <tr key={club.id} className="hover:bg-gray-50 transition-colors group">
-                  <td className="p-4 font-black text-gray-300 group-hover:text-blue-500 transition-colors">#{idx + 1}</td>
-                  <td className="p-4">
-                    <div className="font-bold text-gray-800">{club.name}</div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase">{club.type}</div>
-                  </td>
-                  <td className="p-4 text-center font-mono font-bold">
-                    <span className={club.regCount >= club.capacity ? 'text-red-500' : 'text-blue-600'}>{club.regCount}</span> 
-                    <span className="text-gray-300 mx-1">/</span>
-                    <span className="text-gray-400">{club.capacity}</span>
-                  </td>
-                  <td className="p-4">
-                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-1000 ${club.regCount >= club.capacity ? 'bg-red-500' : (club.regCount / club.capacity) > 0.8 ? 'bg-orange-500' : 'bg-green-500'}`} 
-                        style={{ width: `${Math.min(100, (club.regCount / club.capacity) * 100)}%` }}
-                      ></div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {popularClubs.map((club, idx) => {
+                const percent = (club.regCount / club.capacity) * 100;
+                return (
+                  <tr key={club.id} className="hover:bg-purple-50/30 transition-colors group">
+                    <td className="p-4 text-center font-black text-gray-300 group-hover:text-purple-600 transition-colors">{idx + 1}</td>
+                    <td className="p-4 font-bold text-gray-800">{club.name}</td>
+                    <td className="p-4 text-xs font-medium text-gray-500 uppercase tracking-tight">{club.type}</td>
+                    <td className="p-4 text-center font-mono font-bold">
+                      <span className={club.regCount >= club.capacity ? 'text-red-500' : 'text-blue-600'}>{club.regCount}</span> 
+                      <span className="text-gray-300 mx-1">/</span>
+                      <span className="text-gray-400">{club.capacity}</span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1 items-center">
+                        <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                          <div 
+                            className={`h-full transition-all duration-1000 ${club.regCount >= club.capacity ? 'bg-red-500' : percent > 80 ? 'bg-orange-500' : 'bg-green-500'}`} 
+                            style={{ width: `${Math.min(100, percent)}%` }}
+                          />
+                        </div>
+                        <span className="text-[9px] font-black text-gray-400 uppercase">
+                          {club.regCount >= club.capacity ? 'CLOSED' : `${Math.floor(percent)}% FULL`}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -758,7 +765,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col selection:bg-blue-100 selection:text-blue-900">
       <style>{`
-        /* Screen CSS for A4 Preview */
+        /* Screen Styles for A4 Preview */
         .a4-page {
           width: 210mm;
           min-height: 297mm;
@@ -769,25 +776,33 @@ const App: React.FC = () => {
           border-radius: 4px;
         }
 
-        /* Improved Print CSS - แก้ไขปัญหาข้อมูลไม่แสดงเมื่อสั่งพิมพ์ */
+        /* Improved Print Styles - แก้ไขปัญหาหน้ากระดาษว่างเมื่อสั่งพิมพ์ */
         @media print {
           @page { 
             size: A4; 
             margin: 0; 
           }
           
-          /* ซ่อนทุกอย่างยกเว้น print-content */
-          body > *:not(.no-print-backdrop) { 
-            display: none !important; 
+          /* ซ่อนส่วนประกอบหลักของเว็บ */
+          body > #root > header,
+          body > #root > main,
+          body > #root > footer {
+            display: none !important;
           }
 
           body {
             background: white !important;
             margin: 0 !important;
             padding: 0 !important;
+            overflow: visible !important;
           }
 
-          /* ปรับ Overlay ให้ขยายเต็มหน้าจอ และไม่เป็น fixed เพื่อให้ browser เลื่อนหน้าพิมพ์ได้ */
+          #root {
+            height: auto !important;
+            overflow: visible !important;
+          }
+
+          /* ปรับแต่ง Overlay ให้แสดงผลเต็มที่ในโหมดพิมพ์ */
           .no-print-backdrop {
             position: absolute !important;
             top: 0 !important;
@@ -799,16 +814,24 @@ const App: React.FC = () => {
             margin: 0 !important;
             overflow: visible !important;
             backdrop-filter: none !important;
-            z-index: 100 !important;
+            z-index: 10000 !important;
+            visibility: visible !important;
+          }
+
+          /* ซ่อนปุ่มและส่วนควบคุมในตัวอย่าง */
+          .no-print-backdrop .print\:hidden,
+          .no-print-backdrop button {
+            display: none !important;
           }
 
           #print-content {
             display: block !important;
             width: 100% !important;
             background: white !important;
+            visibility: visible !important;
           }
 
-          /* ปรับแต่งหน้ากระดาษ A4 ในโหมดพิมพ์ */
+          /* บังคับหน้า A4 ให้พอดีกับกระดาษจริง */
           .a4-page {
             width: 210mm !important;
             height: 297mm !important;
@@ -822,9 +845,10 @@ const App: React.FC = () => {
             display: flex !important;
             flex-direction: column !important;
             position: relative !important;
+            visibility: visible !important;
           }
 
-          /* บังคับสีให้แสดงเมื่อพิมพ์ */
+          /* บังคับให้พิมพ์สีและเส้นขอบ */
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -833,6 +857,7 @@ const App: React.FC = () => {
 
           table, th, td {
             border-color: black !important;
+            visibility: visible !important;
           }
 
           .text-green-700 { color: #15803d !important; }
