@@ -38,7 +38,8 @@ import {
   Info,
   UserPlus,
   Trash2,
-  Pin
+  Pin,
+  ListChecks
 } from 'lucide-react';
 
 import { 
@@ -328,7 +329,7 @@ const App: React.FC = () => {
     });
   };
 
-  // --- Announcement Logic ---
+  // --- Announcement Management ---
   const handleAddAnnouncement = async () => {
     const { value: formValues } = await Swal.fire({
       title: 'เพิ่มประกาศใหม่',
@@ -362,6 +363,31 @@ const App: React.FC = () => {
     }
   };
 
+  const handleEditAnnouncement = async (ann: Announcement) => {
+    const { value: formValues } = await Swal.fire({
+      title: 'แก้ไขประกาศ',
+      html: `
+        <div class="text-left space-y-3 p-1">
+          <div><label class="text-[10px] font-black uppercase text-gray-400 block mb-1">หัวข้อประกาศ</label><input id="ann-title" class="w-full border p-3 rounded-xl text-sm shadow-inner" value="${ann.title}"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 block mb-1">รายละเอียด</label><textarea id="ann-content" class="w-full border p-3 rounded-xl text-sm h-24">${ann.content}</textarea></div>
+          <div class="flex items-center gap-2 pt-1"><input type="checkbox" id="ann-pin" class="w-4 h-4 text-blue-600" ${ann.isPinned ? 'checked' : ''}><label for="ann-pin" class="text-sm font-bold text-gray-600">ปักหมุดประกาศนี้</label></div>
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: 'บันทึกการแก้ไข',
+      preConfirm: () => {
+        const title = (document.getElementById('ann-title') as HTMLInputElement).value.trim();
+        const content = (document.getElementById('ann-content') as HTMLTextAreaElement).value.trim();
+        if(!title || !content) { Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน'); return false; }
+        return { title, content, isPinned: (document.getElementById('ann-pin') as HTMLInputElement).checked };
+      }
+    });
+    
+    if (formValues) {
+      setAnnouncements(prev => prev.map(a => a.id === ann.id ? { ...a, ...formValues } : a));
+      Swal.fire('สำเร็จ', 'แก้ไขประกาศเรียบร้อยแล้ว', 'success');
+    }
+  };
+
   const deleteAnnouncement = (id: string) => {
     Swal.fire({
       title: 'ลบประกาศ?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ'
@@ -379,6 +405,28 @@ const App: React.FC = () => {
 
   const toggleHideAnnouncement = (id: string) => {
     setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, isHidden: !a.isHidden } : a));
+  };
+
+  // --- Registration Rules Management ---
+  const handleEditRules = async () => {
+    const { value: rulesText } = await Swal.fire({
+      title: 'แก้ไขระเบียบการสมัคร',
+      html: `
+        <div class="text-left space-y-3 p-1">
+          <p class="text-[10px] text-blue-500 font-bold bg-blue-50 p-2 rounded">ใส่ระเบียบการบรรทัดละ 1 ข้อ</p>
+          <textarea id="rules-input" class="w-full h-48 border p-3 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">${registrationRules.join('\n')}</textarea>
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: 'บันทึก',
+      width: '600px',
+      preConfirm: () => (document.getElementById('rules-input') as HTMLTextAreaElement).value
+    });
+
+    if (rulesText !== undefined) {
+      const newRules = rulesText.split('\n').filter(r => r.trim() !== "");
+      setRegistrationRules(newRules);
+      Swal.fire('สำเร็จ', 'อัปเดตระเบียบการเรียบร้อยแล้ว', 'success');
+    }
   };
 
   // --- Print Preview Overlay Component ---
@@ -806,6 +854,19 @@ const App: React.FC = () => {
           <StatCard icon={<School className="text-purple-500"/>} title="ชุมนุมทั้งหมด" value={clubs.length} unit="ชุมนุม" />
         </div>
 
+        {/* จัดการระเบียบการ */}
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold flex items-center gap-2 text-blue-900"><ListChecks size={22} /> จัดการระเบียบการสมัคร</h3>
+            <button onClick={handleEditRules} className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md hover:bg-blue-700 transition-all active:scale-95">
+              <Pencil size={16} /> แก้ไขระเบียบการ
+            </button>
+          </div>
+          <ul className="list-decimal list-inside space-y-2 text-sm text-gray-700 bg-gray-50 p-4 rounded-xl border border-dashed">
+            {registrationRules.length === 0 ? <li className="text-gray-400 italic">ยังไม่มีระเบียบการ</li> : registrationRules.map((rule, idx) => <li key={idx}>{rule}</li>)}
+          </ul>
+        </section>
+
         {/* ระบบจัดการประกาศ */}
         <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-6">
@@ -814,7 +875,7 @@ const App: React.FC = () => {
               <PlusCircle size={16} /> เพิ่มประกาศ
             </button>
           </div>
-          <div className="overflow-x-auto rounded-xl border border-gray-100">
+          <div className="overflow-x-auto rounded-xl border border-gray-100 shadow-inner">
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b">
                 <tr>
@@ -846,9 +907,10 @@ const App: React.FC = () => {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => togglePinAnnouncement(ann.id)} className={`p-2 rounded-lg transition-colors ${ann.isPinned ? 'bg-red-100 text-red-600' : 'bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600'}`} title="ปักหมุด"><Pin size={14}/></button>
+                        <button onClick={() => togglePinAnnouncement(ann.id)} className={`p-2 rounded-lg transition-colors ${ann.isPinned ? 'bg-red-100 text-red-600' : 'bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600'}`} title="ปักหมุด/ถอนหมุด"><Pin size={14}/></button>
                         <button onClick={() => toggleHideAnnouncement(ann.id)} className={`p-2 rounded-lg transition-colors ${ann.isHidden ? 'bg-gray-200 text-gray-600' : 'bg-gray-50 text-gray-400 hover:bg-blue-50 hover:text-blue-600'}`} title="ซ่อน/แสดง">{ann.isHidden ? <EyeOff size={14}/> : <Eye size={14}/>}</button>
-                        <button onClick={() => deleteAnnouncement(ann.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors" title="ลบ"><Trash2 size={14}/></button>
+                        <button onClick={() => handleEditAnnouncement(ann)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors" title="แก้ไขประกาศ"><Pencil size={14}/></button>
+                        <button onClick={() => deleteAnnouncement(ann.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors" title="ลบประกาศ"><Trash2 size={14}/></button>
                       </div>
                     </td>
                   </tr>
