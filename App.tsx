@@ -33,7 +33,9 @@ import {
   ArrowUpDown,
   ArrowUpNarrowWide,
   ArrowDownWideNarrow,
-  FileUp
+  FileUp,
+  MapPinned,
+  Info
 } from 'lucide-react';
 
 import { 
@@ -179,19 +181,6 @@ const App: React.FC = () => {
     return list.slice(0, popularLimit);
   }, [clubs, students, popularLimit]);
 
-  const filteredAndSortedTeachers = useMemo(() => {
-    let result = teachers.map(t => {
-      const tClubs = clubs.filter(c => String(c.advisorId) === String(t.id) || String(c.coAdvisorId) === String(t.id));
-      const tRegTotal = students.filter(s => tClubs.map(c => String(c.id)).includes(String(s.clubId))).length;
-      return { ...t, tClubs, tRegTotal };
-    });
-    if (adminFilterDept !== 'ทั้งหมด') result = result.filter(t => t.department === adminFilterDept);
-    if (adminFilterClub.trim() !== '') result = result.filter(t => t.tClubs.some(c => String(c.name).toLowerCase().includes(adminFilterClub.toLowerCase())));
-    if (adminSortOrder === 'asc') result.sort((a, b) => a.tRegTotal - b.tRegTotal);
-    else if (adminSortOrder === 'desc') result.sort((a, b) => b.tRegTotal - a.tRegTotal);
-    return result;
-  }, [teachers, clubs, students, adminFilterDept, adminFilterClub, adminSortOrder]);
-
   const sortedClubs = useMemo(() => {
     return [...clubs]
       .map(c => ({
@@ -239,11 +228,12 @@ const App: React.FC = () => {
 
   const handleBulkAddTeachers = (newTeachers: Teacher[]) => {
     const existingIds = new Set(teachers.map(t => String(t.id)));
-    const duplicates: string[] = [];
     const uniqueNewOnes: Teacher[] = [];
     newTeachers.forEach(t => {
-      if (existingIds.has(String(t.id))) duplicates.push(String(t.id));
-      else { uniqueNewOnes.push(t); existingIds.add(String(t.id)); }
+      if (!existingIds.has(String(t.id))) {
+        uniqueNewOnes.push(t);
+        existingIds.add(String(t.id));
+      }
     });
     if (uniqueNewOnes.length > 0) {
       setTeachers(prev => [...prev, ...uniqueNewOnes]);
@@ -328,12 +318,12 @@ const App: React.FC = () => {
       pending: clubStudents.filter(s => s.grade === null).length
     };
 
-    const pageSize = 25;
+    const pageSize = 25; // แผ่นละ 25 คน
     const pageCount = Math.max(1, Math.ceil(clubStudents.length / pageSize));
     const pages = Array.from({ length: pageCount }, (_, i) => clubStudents.slice(i * pageSize, (i + 1) * pageSize));
 
     return (
-      <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex flex-col items-center justify-start p-4 md:p-10 overflow-y-auto no-print-backdrop">
+      <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex flex-col items-center justify-start p-4 md:p-8 overflow-y-auto no-print-backdrop">
         <div className="flex justify-center gap-4 mb-6 w-full max-w-4xl print:hidden">
           <button 
             onClick={() => window.print()}
@@ -352,112 +342,113 @@ const App: React.FC = () => {
         <div id="print-content" className="flex flex-col gap-0 bg-transparent">
           {pages.map((studentChunk, pageIdx) => (
             <div key={pageIdx} className="a4-page bg-white relative overflow-hidden mb-10 print:mb-0 shadow-2xl print:shadow-none">
-              <div className="absolute top-10 right-12 text-[10px] text-gray-400 font-bold print:top-6 print:right-10">
+              <div className="absolute top-8 right-10 text-[10px] text-gray-400 font-bold print:top-6 print:right-10">
                 หน้า {pageIdx + 1} / {pageCount}
               </div>
 
-              <div className="p-16 h-full flex flex-col print:p-10">
+              <div className="p-12 h-full flex flex-col print:p-8">
                 {pageIdx === 0 ? (
-                  <div className="text-center mb-8">
-                    <img src={SCHOOL_LOGO} alt="School Logo" className="h-24 mx-auto mb-4" />
-                    <h1 className="text-xl font-bold text-black leading-tight">บัญชีรายชื่อนักเรียนและผลการประเมินกิจกรรมชุมนุม</h1>
-                    <h2 className="text-lg font-bold text-gray-800">ชื่อชุมนุม: {club.name} ({club.type})</h2>
-                    <p className="text-md font-medium text-gray-700">โรงเรียนหนองบัวแดงวิทยา</p>
-                    <div className="mt-4 flex justify-center gap-10 text-xs font-bold border-y-2 border-black py-2 mt-4">
+                  <div className="text-center mb-6">
+                    <img src={SCHOOL_LOGO} alt="School Logo" className="h-20 mx-auto mb-2" />
+                    <h1 className="text-lg font-bold text-black leading-tight">บัญชีรายชื่อนักเรียนและผลการประเมินกิจกรรมชุมนุม</h1>
+                    <h2 className="text-md font-bold text-gray-800">ชื่อชุมนุม: {club.name} ({club.type})</h2>
+                    <p className="text-sm font-medium text-gray-700">โรงเรียนหนองบัวแดงวิทยา</p>
+                    <div className="mt-2 flex justify-center gap-10 text-[10px] font-bold border-y border-black py-1.5 mt-2">
                       <p>ครูที่ปรึกษาหลัก: {advisor?.name || club.advisorId}</p>
                       {coAdvisor && <p>ครูที่ปรึกษาร่วม: {coAdvisor.name}</p>}
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center mb-6 border-b-2 border-black pb-2">
+                  <div className="text-center mb-4 border-b border-black pb-1.5">
                     <h1 className="text-sm font-bold">บัญชีรายชื่อนักเรียนชุมนุม {club.name} (ต่อ) หน้า {pageIdx + 1}</h1>
                   </div>
                 )}
 
-                <table className="w-full border-collapse border-2 border-black text-xs mb-auto">
+                <table className="w-full border-collapse border border-black text-xs mb-auto">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="border border-black p-2 w-10 text-center">ลำดับ</th>
-                      <th className="border border-black p-2 w-24 text-center">รหัสประจำตัว</th>
-                      <th className="border border-black p-2 text-left">ชื่อ-นามสกุล</th>
-                      <th className="border border-black p-2 w-20 text-center">ชั้น/ห้อง</th>
-                      <th className="border border-black p-2 w-24 text-center">ผลการประเมิน</th>
-                      <th className="border border-black p-2 w-32 text-center">หมายเหตุ</th>
+                      <th className="border border-black p-1.5 w-10 text-center">ลำดับ</th>
+                      <th className="border border-black p-1.5 w-24 text-center">รหัสประจำตัว</th>
+                      <th className="border border-black p-1.5 text-left">ชื่อ-นามสกุล</th>
+                      <th className="border border-black p-1.5 w-16 text-center">ชั้น/ห้อง</th>
+                      <th className="border border-black p-1.5 w-20 text-center">ผลการประเมิน</th>
+                      <th className="border border-black p-1.5 w-28 text-center">หมายเหตุ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {studentChunk.map((s, idx) => (
-                      <tr key={s.id} className="h-8">
-                        <td className="border border-black p-1.5 text-center">{(pageIdx * pageSize) + idx + 1}</td>
-                        <td className="border border-black p-1.5 text-center font-mono">{s.id}</td>
-                        <td className="border border-black p-1.5 px-3 text-left">{s.name}</td>
-                        <td className="border border-black p-1.5 text-center">{s.level}/{s.room}</td>
-                        <td className="border border-black p-1.5 text-center font-bold">
+                      <tr key={s.id} className="h-7">
+                        <td className="border border-black p-1 text-center">{(pageIdx * pageSize) + idx + 1}</td>
+                        <td className="border border-black p-1 text-center font-mono">{s.id}</td>
+                        <td className="border border-black p-1 px-2 text-left">{s.name}</td>
+                        <td className="border border-black p-1 text-center">{s.level}/{s.room}</td>
+                        <td className="border border-black p-1 text-center font-bold">
                           {s.grade === 'ผ' ? 'ผ่าน' : s.grade === 'มผ' ? 'ไม่ผ่าน' : '-'}
                         </td>
-                        <td className="border border-black p-1.5"></td>
+                        <td className="border border-black p-1"></td>
                       </tr>
                     ))}
+                    {/* เติมแถวว่างให้ครบ 25 แถวเพื่อให้ความสูงคงที่ */}
                     {studentChunk.length < pageSize && Array.from({ length: pageSize - studentChunk.length }).map((_, i) => (
-                      <tr key={`empty-${i}`} className="h-8">
-                        <td className="border border-black p-1.5">&nbsp;</td>
-                        <td className="border border-black p-1.5">&nbsp;</td>
-                        <td className="border border-black p-1.5">&nbsp;</td>
-                        <td className="border border-black p-1.5">&nbsp;</td>
-                        <td className="border border-black p-1.5">&nbsp;</td>
-                        <td className="border border-black p-1.5">&nbsp;</td>
+                      <tr key={`empty-${i}`} className="h-7">
+                        <td className="border border-black p-1">&nbsp;</td>
+                        <td className="border border-black p-1">&nbsp;</td>
+                        <td className="border border-black p-1">&nbsp;</td>
+                        <td className="border border-black p-1">&nbsp;</td>
+                        <td className="border border-black p-1">&nbsp;</td>
+                        <td className="border border-black p-1">&nbsp;</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
 
                 {pageIdx === pageCount - 1 && (
-                  <div className="mt-8">
-                    <div className="p-4 border-2 border-black rounded-xl mb-8 print:rounded-none">
-                      <h4 className="font-bold text-sm mb-3 border-b border-black pb-1 flex items-center gap-2">
-                        <FileText size={16} /> สรุปผลการดำเนินงาน
+                  <div className="mt-6">
+                    <div className="p-3 border border-black rounded-lg mb-6 print:rounded-none">
+                      <h4 className="font-bold text-xs mb-2 border-b border-black pb-1 flex items-center gap-2">
+                        <FileText size={14} /> สรุปผลการดำเนินงาน
                       </h4>
-                      <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
-                        <div className="flex justify-between border-b border-dashed border-gray-300">
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[10px]">
+                        <div className="flex justify-between border-b border-dotted border-gray-400">
                           <span>จำนวนนักเรียนทั้งหมด:</span>
                           <span className="font-bold">{stats.total} คน</span>
                         </div>
-                        <div className="flex justify-between border-b border-dashed border-gray-300">
+                        <div className="flex justify-between border-b border-dotted border-gray-400">
                           <span>ประเมินผ่าน (ผ):</span>
                           <span className="font-bold text-green-700">{stats.passed} คน</span>
                         </div>
-                        <div className="flex justify-between border-b border-dashed border-gray-300">
+                        <div className="flex justify-between border-b border-dotted border-gray-400">
                           <span>ประเมินไม่ผ่าน (มผ):</span>
                           <span className="font-bold text-red-600">{stats.failed} คน</span>
                         </div>
-                        <div className="flex justify-between border-b border-dashed border-gray-300">
+                        <div className="flex justify-between border-b border-dotted border-gray-400">
                           <span>ยังไม่ได้ประเมิน:</span>
-                          <span className="font-bold text-gray-400">{stats.pending} คน</span>
+                          <span className="font-bold text-gray-500">{stats.pending} คน</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-10 flex justify-around items-end">
+                    <div className="mt-8 flex justify-around items-end">
                       <div className="text-center">
-                        <div className="mb-10 border-b border-black w-56 mx-auto"></div>
-                        <p className="font-bold text-xs">(ลงชื่อ)......................................................</p>
-                        <p className="mt-1 font-medium text-xs">ครูที่ปรึกษาหลัก</p>
-                        <p className="text-[10px] text-gray-500">({advisor?.name || '........................................'})</p>
+                        <div className="mb-6 border-b border-black w-48 mx-auto"></div>
+                        <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
+                        <p className="mt-0.5 font-medium text-[10px]">ครูที่ปรึกษาหลัก</p>
+                        <p className="text-[9px] text-gray-500">({advisor?.name || '........................................'})</p>
                       </div>
                       {coAdvisor && (
                         <div className="text-center">
-                          <div className="mb-10 border-b border-black w-56 mx-auto"></div>
-                          <p className="font-bold text-xs">(ลงชื่อ)......................................................</p>
-                          <p className="mt-1 font-medium text-xs">ครูที่ปรึกษาร่วม</p>
-                          <p className="text-[10px] text-gray-500">({coAdvisor.name})</p>
+                          <div className="mb-6 border-b border-black w-48 mx-auto"></div>
+                          <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
+                          <p className="mt-0.5 font-medium text-[10px]">ครูที่ปรึกษาร่วม</p>
+                          <p className="text-[9px] text-gray-500">({coAdvisor.name})</p>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
                 
-                <div className="mt-auto pt-6 text-[8px] text-gray-400 italic text-right">
-                  พิมพ์จากระบบโรงเรียนหนองบัวแดงวิทยา เมื่อ: {new Date().toLocaleDateString('th-TH')} {new Date().toLocaleTimeString('th-TH')}
+                <div className="mt-auto pt-4 text-[7px] text-gray-400 italic text-right">
+                  พิมพ์เมื่อ: {new Date().toLocaleDateString('th-TH')} {new Date().toLocaleTimeString('th-TH')}
                 </div>
               </div>
             </div>
@@ -639,7 +630,7 @@ const App: React.FC = () => {
           </div>
         </div>
         {!isSystemOpen && <div className="bg-red-50 border-2 border-red-200 text-red-700 p-8 rounded-2xl text-center mb-8"><XCircle size={48} className="mx-auto mb-4" /><h3 className="text-xl font-bold">ระบบปิดรับสมัครชั่วคราว</h3><p>โปรดติดตามประกาศหน้าแรกเพื่อดูวันเวลาเปิดรับสมัครอีกครั้ง</p></div>}
-        <div className="grid grid-cols-1 md:flex-wrap lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredClubs.map(club => <ClubCard key={club.id} club={club} students={students} teachers={teachers} onRegister={() => openRegistrationModal(club)} disabled={!isSystemOpen} />)}
         </div>
       </div>
@@ -722,13 +713,6 @@ const App: React.FC = () => {
     );
   };
 
-  const handleEditRulesModal = async () => {
-    const { value: formValues } = await Swal.fire({
-      title: 'แก้ไขระเบียบการ', html: `<textarea id="rules-input" class="w-full h-40 border p-2 rounded">${registrationRules.join('\n')}</textarea>`, showCancelButton: true, preConfirm: () => (document.getElementById('rules-input') as HTMLTextAreaElement).value.split('\n').filter(r => r.trim() !== "")
-    });
-    if (formValues) setRegistrationRules(formValues);
-  };
-
   const handleRegisterTeacherModal = async () => {
     const { value: formValues } = await Swal.fire({
       title: 'ลงทะเบียนครูใหม่', html: `<div class="text-left"><label class="text-xs">รหัสครู 4 หลัก</label><input id="t-id" class="w-full border p-2 mb-2 rounded"><label class="text-xs">ชื่อ-นามสกุล</label><input id="t-name" class="w-full border p-2 mb-2 rounded"><label class="text-xs">กลุ่มสาระ</label><select id="t-dept" class="w-full border p-2 rounded">${DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('')}</select></div>`, showCancelButton: true, preConfirm: () => ({ id: (document.getElementById('t-id') as HTMLInputElement).value.trim(), name: (document.getElementById('t-name') as HTMLInputElement).value.trim(), department: (document.getElementById('t-dept') as HTMLSelectElement).value })
@@ -765,7 +749,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col selection:bg-blue-100 selection:text-blue-900">
       <style>{`
-        /* Screen Styles for A4 Preview */
+        /* A4 Preview Styles */
         .a4-page {
           width: 210mm;
           min-height: 297mm;
@@ -776,14 +760,14 @@ const App: React.FC = () => {
           border-radius: 4px;
         }
 
-        /* Improved Print Styles - แก้ไขปัญหาหน้ากระดาษว่างเมื่อสั่งพิมพ์ */
+        /* Improved Print Styles */
         @media print {
           @page { 
             size: A4; 
             margin: 0; 
           }
           
-          /* ซ่อนส่วนประกอบหลักของเว็บ */
+          /* ซ่อนทุกอย่างยกเว้นส่วนรายงาน */
           body > #root > header,
           body > #root > main,
           body > #root > footer {
@@ -802,7 +786,6 @@ const App: React.FC = () => {
             overflow: visible !important;
           }
 
-          /* ปรับแต่ง Overlay ให้แสดงผลเต็มที่ในโหมดพิมพ์ */
           .no-print-backdrop {
             position: absolute !important;
             top: 0 !important;
@@ -818,7 +801,6 @@ const App: React.FC = () => {
             visibility: visible !important;
           }
 
-          /* ซ่อนปุ่มและส่วนควบคุมในตัวอย่าง */
           .no-print-backdrop .print\:hidden,
           .no-print-backdrop button {
             display: none !important;
@@ -831,12 +813,11 @@ const App: React.FC = () => {
             visibility: visible !important;
           }
 
-          /* บังคับหน้า A4 ให้พอดีกับกระดาษจริง */
           .a4-page {
             width: 210mm !important;
             height: 297mm !important;
             min-height: 297mm !important;
-            padding: 15mm !important;
+            padding: 10mm !important; /* ลดระยะขอบด้านนอกแผ่น */
             margin: 0 !important;
             page-break-after: always !important;
             box-shadow: none !important;
@@ -848,7 +829,6 @@ const App: React.FC = () => {
             visibility: visible !important;
           }
 
-          /* บังคับให้พิมพ์สีและเส้นขอบ */
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -859,11 +839,6 @@ const App: React.FC = () => {
             border-color: black !important;
             visibility: visible !important;
           }
-
-          .text-green-700 { color: #15803d !important; }
-          .text-red-600 { color: #dc2626 !important; }
-          .text-gray-400 { color: #9ca3af !important; }
-          img { max-width: 120px !important; }
         }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -895,16 +870,64 @@ const ClubCard = ({ club, students, teachers, onRegister, disabled }: any) => {
   const isFull = count >= club.capacity;
   const percent = (count / club.capacity) * 100;
   const advisor = teachers.find((t: Teacher) => String(t.id) === String(club.advisorId));
+  const coAdvisor = club.coAdvisorId ? teachers.find((t: Teacher) => String(t.id) === String(club.coAdvisorId)) : null;
   const badgeColor = isFull ? 'bg-red-100 text-red-700' : percent >= 80 ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700';
+  
   return (
     <div className="group rounded-2xl border-2 transition-all overflow-hidden flex flex-col h-full hover:shadow-xl bg-white border-gray-100">
       <div className="p-6 flex-1">
-        <div className="flex justify-between items-start mb-4"><span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase ${badgeColor}`}>{club.type}</span>{isFull && <span className="text-red-600 font-bold text-sm">เต็ม</span>}</div>
-        <h3 className="text-xl font-bold text-gray-800 mb-2">{club.name}</h3>
-        <p className="text-xs text-gray-500 mb-6">{advisor ? `ครู: ${advisor.name}` : ''}</p>
-        <div className="mt-auto"><div className="flex justify-between text-[10px] mb-1.5 font-bold uppercase text-gray-400"><span>ความจุ</span><span>{count} / {club.capacity}</span></div><div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden"><div className={`h-full transition-all ${isFull ? 'bg-red-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, percent)}%` }} /></div></div>
+        <div className="flex justify-between items-start mb-4">
+          <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase ${badgeColor}`}>{club.type}</span>
+          {isFull && <span className="text-red-600 font-bold text-sm">เต็ม</span>}
+        </div>
+        <h3 className="text-xl font-bold text-gray-800 mb-1">{club.name}</h3>
+        
+        {/* รายละเอียดเพิ่มเติม */}
+        {club.description && (
+          <div className="flex items-start gap-1.5 mb-3 text-xs text-gray-600 italic">
+            <Info size={14} className="mt-0.5 shrink-0" />
+            <p className="line-clamp-2">{club.description}</p>
+          </div>
+        )}
+
+        {/* ข้อมูลครูที่ปรึกษา */}
+        <div className="space-y-1 mb-6">
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <UserPen size={14} />
+            <span>ครูที่ปรึกษา: <b>{advisor?.name || '-'}</b></span>
+          </div>
+          {coAdvisor && (
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Users size={14} />
+              <span>ครูที่ปรึกษาร่วม: <b>{coAdvisor.name}</b></span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <MapPinned size={14} />
+            <span>สถานที่: <b>{club.location}</b></span>
+          </div>
+        </div>
+
+        <div className="mt-auto">
+          <div className="flex justify-between text-[10px] mb-1.5 font-bold uppercase text-gray-400">
+            <span>ความจุ</span>
+            <span>{count} / {club.capacity}</span>
+          </div>
+          <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+            <div 
+              className={`h-full transition-all ${isFull ? 'bg-red-500' : percent > 80 ? 'bg-orange-500' : 'bg-green-500'}`} 
+              style={{ width: `${Math.min(100, percent)}%` }} 
+            />
+          </div>
+        </div>
       </div>
-      <button disabled={disabled || isFull} onClick={onRegister} className={`w-full py-4 text-center font-bold text-sm ${isFull || disabled ? 'bg-gray-100 text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>{isFull ? 'เต็มแล้ว' : 'สมัครชุมนุม'}</button>
+      <button 
+        disabled={disabled || isFull} 
+        onClick={onRegister} 
+        className={`w-full py-4 text-center font-bold text-sm ${isFull || disabled ? 'bg-gray-100 text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'}`}
+      >
+        {isFull ? 'เต็มแล้ว' : 'สมัครชุมนุม'}
+      </button>
     </div>
   );
 };
@@ -924,7 +947,7 @@ const ClubManagementCard = ({ club, students, teachers, isLeadAdvisor, onUpdate,
         <div className="flex gap-2">{isLeadAdvisor && (<><button onClick={() => onUpdate(club)} className="bg-white border text-gray-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm">แก้ไข</button><button onClick={onDelete} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold">ลบ</button></>)}</div>
       </div>
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6"><h5 className="font-bold flex items-center gap-2"><Users size={18} /> รายชื่อนักเรียน</h5><button onClick={onPrint} className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2"><Printer size={16} /> พิมพ์รายงาน</button></div>
+        <div className="flex justify-between items-center mb-6"><h5 className="font-bold flex items-center gap-2"><Users size={18} /> รายชื่อนักเรียน</h5><button onClick={onPrint} className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg active:scale-95"><Printer size={16} /> พิมพ์รายงาน</button></div>
         <div className="overflow-x-auto rounded-xl"><table className="w-full text-sm text-left"><thead className="bg-gray-50"><tr><th className="p-4">รหัส</th><th className="p-4">ชื่อ-สกุล</th><th className="p-4 text-center">ประเมิน</th><th className="p-4 text-center">จัดการ</th></tr></thead><tbody className="divide-y">{clubStudents.map((s: Student) => (<tr key={s.id}><td className="p-4 font-mono">{s.id}</td><td className="p-4"><b>{s.name}</b><br/><small>{s.level}/{s.room} (เลขที่ {s.seatNumber})</small></td><td className="p-4 text-center"><div className="flex justify-center gap-2"><button onClick={() => onGradeUpdate(s.id, 'ผ')} className={`px-2 py-1 rounded text-xs ${s.grade === 'ผ' ? 'bg-green-600 text-white' : 'bg-gray-100'}`}>ผ</button><button onClick={() => onGradeUpdate(s.id, 'มผ')} className={`px-2 py-1 rounded text-xs ${s.grade === 'มผ' ? 'bg-red-600 text-white' : 'bg-gray-100'}`}>มผ</button></div></td><td className="p-4 text-center"><div className="flex justify-center gap-1"><button onClick={() => handleEditStudent(s)} className="p-2 text-blue-400"><Pencil size={18}/></button><button onClick={() => onStudentDelete(s.id)} className="p-2 text-red-400"><XCircle size={18}/></button></div></td></tr>))}</tbody></table></div>
       </div>
     </div>
