@@ -1502,14 +1502,43 @@ const ClubManagementCard = ({ club, students, teachers, isLeadAdvisor, onUpdate,
       title: 'แก้ไขข้อมูลนักเรียน', 
       html: `
         <div class="text-left space-y-3 p-1">
-          <div><label class="text-[10px] font-black uppercase text-gray-400 block mb-1">ชื่อ-นามสกุล</label><input id="s-name" class="w-full border p-3 rounded-xl text-sm shadow-inner" value="${student.name}"></div>
-          <div><label class="text-[10px] font-black uppercase text-gray-400 block mb-1">เลขที่</label><input id="s-seat" type="number" class="w-full border p-3 rounded-xl text-sm shadow-inner" value="${student.seatNumber}"></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[10px] font-black uppercase text-gray-400 block mb-1">รหัสประจำตัว (5 หลัก)</label>
+              <input id="s-id" class="w-full border p-3 rounded-xl text-sm shadow-inner" value="${student.id}" maxlength="5">
+            </div>
+            <div>
+              <label class="text-[10px] font-black uppercase text-gray-400 block mb-1">เลขที่</label>
+              <input id="s-seat" type="number" class="w-full border p-3 rounded-xl text-sm shadow-inner" value="${student.seatNumber}">
+            </div>
+          </div>
+          <div>
+            <label class="text-[10px] font-black uppercase text-gray-400 block mb-1">ชื่อ-นามสกุล</label>
+            <input id="s-name" class="w-full border p-3 rounded-xl text-sm shadow-inner" value="${student.name}">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[10px] font-black uppercase text-gray-400 block mb-1">ระดับชั้น</label>
+              <select id="s-level" class="w-full border p-3 rounded-xl text-sm shadow-inner">
+                ${['ม.1', 'ม.2', 'ม.3', 'ม.4', 'ม.5', 'ม.6'].map(l => `<option value="${l}" ${student.level === l ? 'selected' : ''}>${l}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-black uppercase text-gray-400 block mb-1">ห้อง</label>
+              <select id="s-room" class="w-full border p-3 rounded-xl text-sm shadow-inner">
+                ${ROOMS.map(r => `<option value="${r}" ${student.room === r ? 'selected' : ''}>ห้อง ${r}</option>`).join('')}
+              </select>
+            </div>
+          </div>
         </div>`, 
       showCancelButton: true, 
       confirmButtonText: 'บันทึกการแก้ไข',
       preConfirm: () => ({ 
+        id: (document.getElementById('s-id') as HTMLInputElement).value.trim(),
         name: (document.getElementById('s-name') as HTMLInputElement).value.trim(), 
-        seatNumber: (document.getElementById('s-seat') as HTMLInputElement).value 
+        seatNumber: (document.getElementById('s-seat') as HTMLInputElement).value,
+        level: (document.getElementById('s-level') as HTMLSelectElement).value,
+        room: (document.getElementById('s-room') as HTMLSelectElement).value
       })
     });
     if (formValues) onStudentUpdate(student.id, formValues);
