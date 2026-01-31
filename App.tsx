@@ -79,6 +79,7 @@ const App: React.FC = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>(INITIAL_ANNOUNCEMENTS);
   const [registrationRules, setRegistrationRules] = useState<string[]>(DEFAULT_RULES);
   const [previewClub, setPreviewClub] = useState<Club | null>(null);
+  const [previewTeachersList, setPreviewTeachersList] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   
@@ -427,6 +428,115 @@ const App: React.FC = () => {
       setRegistrationRules(newRules);
       Swal.fire('สำเร็จ', 'อัปเดตระเบียบการเรียบร้อยแล้ว', 'success');
     }
+  };
+
+  // --- Teacher Print Preview Overlay Component ---
+  const TeacherPrintPreviewOverlay = ({ teachersList, onClose }: { teachersList: any[], onClose: () => void }) => {
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(teachersList.length / pageSize));
+    const pages = Array.from({ length: pageCount }, (_, i) => teachersList.slice(i * pageSize, (i + 1) * pageSize));
+
+    return (
+      <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex flex-col items-center justify-start p-4 md:p-8 overflow-y-auto no-print-backdrop">
+        <div className="flex justify-center gap-4 mb-6 w-full max-w-4xl print:hidden">
+          <button 
+            onClick={() => window.print()}
+            className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 shadow-lg active:scale-95 transition-all"
+          >
+            <Printer size={20} /> พิมพ์รายงานครู / บันทึกเป็น PDF
+          </button>
+          <button 
+            onClick={onClose}
+            className="bg-white text-gray-700 px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-100 shadow-lg border active:scale-95 transition-all"
+          >
+            <XCircle size={20} /> ปิดตัวอย่าง
+          </button>
+        </div>
+
+        <div id="print-content" className="flex flex-col gap-0 bg-transparent">
+          {pages.map((teacherChunk, pageIdx) => (
+            <div key={pageIdx} className="a4-page bg-white relative overflow-hidden mb-10 print:mb-0 shadow-2xl print:shadow-none">
+              <div className="absolute top-2 right-6 text-[8px] text-gray-400 font-bold print:top-2 print:right-6">
+                หน้า {pageIdx + 1} / {pageCount}
+              </div>
+
+              <div className="p-8 h-full flex flex-col print:p-6">
+                {pageIdx === 0 ? (
+                  <div className="flex items-center justify-center gap-4 mb-3 border-b border-black pb-2">
+                    <img src={SCHOOL_LOGO} alt="School Logo" className="h-14 w-auto shrink-0" />
+                    <div className="text-center">
+                      <h1 className="text-sm font-bold text-black leading-tight">รายงานรายชื่อบุคลากรครูที่ปรึกษาชุมนุม</h1>
+                      <h2 className="text-xs font-bold text-gray-800">โรงเรียนหนองบัวแดงวิทยา</h2>
+                      <p className="text-[10px] font-medium text-gray-700">ประจำปีการศึกษา 2568</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center mb-2 border-b border-black pb-1">
+                    <h1 className="text-xs font-bold">รายงานรายชื่อครูที่ปรึกษาชุมนุม (ต่อ) หน้า {pageIdx + 1}</h1>
+                  </div>
+                )}
+                
+                <table className="w-full border-collapse border border-black text-xs mb-auto">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-black p-1 w-8 text-center text-[10px]">ลำดับ</th>
+                      <th className="border border-black p-1 w-20 text-center text-[10px]">รหัสครู</th>
+                      <th className="border border-black p-1 text-left text-[10px] px-2">ชื่อ-นามสกุล</th>
+                      <th className="border border-black p-1 w-32 text-center text-[10px]">กลุ่มสาระ</th>
+                      <th className="border border-black p-1 text-left text-[10px] px-2">ชุมนุมที่รับผิดชอบ</th>
+                      <th className="border border-black p-1 w-16 text-center text-[10px]">นร. รวม</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teacherChunk.map((t, idx) => (
+                      <tr key={t.id} className="h-10">
+                        <td className="border border-black p-1 text-center text-[10px]">{(pageIdx * pageSize) + idx + 1}</td>
+                        <td className="border border-black p-1 text-center font-mono text-[10px]">{t.id}</td>
+                        <td className="border border-black p-1 px-2 text-left text-[10px]">{t.name}</td>
+                        <td className="border border-black p-1 text-center text-[10px]">{t.department}</td>
+                        <td className="border border-black p-1 px-2 text-left text-[9px]">
+                          {t.tClubs.length > 0 ? t.tClubs.map((c: any) => c.name).join(', ') : '-'}
+                        </td>
+                        <td className="border border-black p-1 text-center text-[10px] font-bold">{t.tRegTotal}</td>
+                      </tr>
+                    ))}
+                    {teacherChunk.length < pageSize && Array.from({ length: pageSize - teacherChunk.length }).map((_, i) => (
+                      <tr key={`empty-${i}`} className="h-10">
+                        <td className="border border-black p-1">&nbsp;</td>
+                        <td className="border border-black p-1">&nbsp;</td>
+                        <td className="border border-black p-1">&nbsp;</td>
+                        <td className="border border-black p-1">&nbsp;</td>
+                        <td className="border border-black p-1">&nbsp;</td>
+                        <td className="border border-black p-1">&nbsp;</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {pageIdx === pageCount - 1 && (
+                  <div className="mt-8 flex justify-around items-end">
+                    <div className="text-center">
+                      <div className="mb-4 border-b border-black w-48 mx-auto"></div>
+                      <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
+                      <p className="mt-1 font-medium text-[10px]">ผู้รับผิดชอบระบบ</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="mb-4 border-b border-black w-48 mx-auto"></div>
+                      <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
+                      <p className="mt-1 font-medium text-[10px]">ผู้บริหารโรงเรียน</p>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-auto pt-2 text-[7px] text-gray-400 italic text-right">
+                  พิมพ์เมื่อ: {new Date().toLocaleDateString('th-TH')} {new Date().toLocaleTimeString('th-TH')}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   // --- Print Preview Overlay Component ---
@@ -956,6 +1066,9 @@ const App: React.FC = () => {
                   {clubs.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                 </select>
               </div>
+              <button onClick={() => setPreviewTeachersList(true)} className="bg-gray-800 text-white px-4 h-10 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md hover:bg-black transition-all active:scale-95">
+                <Printer size={16} /> พิมพ์ข้อมูลครู
+              </button>
               <button onClick={handleRegisterTeacherModal} className="bg-green-600 text-white px-4 h-10 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md hover:bg-green-700 transition-all active:scale-95">
                 <PlusCircle size={16} /> เพิ่มครู
               </button>
@@ -1302,6 +1415,7 @@ const App: React.FC = () => {
         {activeTab === 'admin' && <AdminTab />}
       </main>
       {previewClub && <PrintPreviewOverlay club={previewClub} onClose={() => setPreviewClub(null)} />}
+      {previewTeachersList && <TeacherPrintPreviewOverlay teachersList={filteredAndSortedTeachers} onClose={() => setPreviewTeachersList(false)} />}
       <Footer />
     </div>
   );
@@ -1331,6 +1445,7 @@ const ClubCard = ({ club, students, teachers, onRegister, disabled }: any) => {
         </div>
         <h3 className="text-xl font-bold text-gray-800 mb-1 leading-tight group-hover:text-blue-900 transition-colors">{club.name}</h3>
         
+        {/* รายละเอียดเพิ่มเติม */}
         {club.description && (
           <div className="flex items-start gap-1.5 my-3 text-xs text-gray-500 bg-gray-50 p-3 rounded-xl border border-dashed">
             <Info size={14} className="mt-0.5 shrink-0 text-blue-400" />
