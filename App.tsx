@@ -432,7 +432,7 @@ const App: React.FC = () => {
 
   // --- Teacher Print Preview Overlay Component ---
   const TeacherPrintPreviewOverlay = ({ teachersList, onClose }: { teachersList: any[], onClose: () => void }) => {
-    const pageSize = 20; // 20 คนต่อหน้าตามคำขอ
+    const pageSize = 20; // 20 คนต่อหน้า
     const pageCount = Math.max(1, Math.ceil(teachersList.length / pageSize));
     const pages = Array.from({ length: pageCount }, (_, i) => teachersList.slice(i * pageSize, (i + 1) * pageSize));
 
@@ -461,48 +461,41 @@ const App: React.FC = () => {
               </div>
 
               <div className="p-8 h-full flex flex-col print:p-6">
-                {pageIdx === 0 ? (
-                  // ปรับปรุง Layout หัวกระดาษ: ตราโรงเรียนอยู่ด้านบนกึ่งกลาง
-                  <div className="flex flex-col items-center justify-center gap-2 mb-4 border-b-2 border-black pb-3">
-                    <img src={SCHOOL_LOGO} alt="School Logo" className="h-20 w-auto mb-1" />
-                    <div className="text-center">
-                      <h1 className="text-base font-bold text-black leading-tight">รายงานรายชื่อบุคลากรครูที่ปรึกษาชุมนุม</h1>
-                      <h2 className="text-sm font-bold text-gray-800">โรงเรียนหนองบัวแดงวิทยา</h2>
-                      <p className="text-[10px] font-medium text-gray-700">ประจำปีการศึกษา 2568</p>
-                    </div>
+                <div className="flex flex-col items-center justify-center gap-2 mb-4 border-b-2 border-black pb-3">
+                  <img src={SCHOOL_LOGO} alt="School Logo" className="h-20 w-auto mb-1" />
+                  <div className="text-center">
+                    <h1 className="text-base font-bold text-black leading-tight uppercase">รายงานรายชื่อบุคลากรครูที่ปรึกษาชุมนุม</h1>
+                    <h2 className="text-sm font-bold text-gray-800">โรงเรียนหนองบัวแดงวิทยา</h2>
+                    <p className="text-[10px] font-medium text-gray-700">ประจำปีการศึกษา 2568</p>
                   </div>
-                ) : (
-                  <div className="text-center mb-2 border-b border-black pb-1">
-                    <h1 className="text-xs font-bold">รายงานรายชื่อครูที่ปรึกษาชุมนุม (ต่อ) หน้า {pageIdx + 1}</h1>
-                  </div>
-                )}
+                </div>
                 
                 <table className="w-full border-collapse border border-black text-xs mb-auto">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="border border-black p-1.5 w-10 text-center text-[11px]">ลำดับ</th>
-                      <th className="border border-black p-1.5 w-24 text-center text-[11px]">รหัสครู</th>
-                      <th className="border border-black p-1.5 text-left text-[11px] px-3">ชื่อ-นามสกุล</th>
-                      <th className="border border-black p-1.5 w-36 text-center text-[11px]">กลุ่มสาระ</th>
-                      <th className="border border-black p-1.5 text-left text-[11px] px-3">ชุมนุมที่รับผิดชอบ</th>
-                      <th className="border border-black p-1.5 w-20 text-center text-[11px]">นร. รวม</th>
+                      <th className="border border-black p-1 w-10 text-center text-[10px]">ลำดับ</th>
+                      <th className="border border-black p-1 w-20 text-center text-[10px]">รหัสครู</th>
+                      <th className="border border-black p-1 text-left text-[10px] px-2 w-[25%]">ชื่อ-นามสกุล</th>
+                      <th className="border border-black p-1 w-32 text-center text-[10px]">กลุ่มสาระ</th>
+                      <th className="border border-black p-1 text-left text-[10px] px-2">ชุมนุมที่รับผิดชอบ</th>
+                      <th className="border border-black p-1 w-16 text-center text-[10px]">นร.รวม</th>
                     </tr>
                   </thead>
                   <tbody>
                     {teacherChunk.map((t, idx) => (
-                      <tr key={t.id} className="h-12">
-                        <td className="border border-black p-1 text-center text-[11px]">{(pageIdx * pageSize) + idx + 1}</td>
-                        <td className="border border-black p-1 text-center font-mono text-[11px]">{t.id}</td>
-                        <td className="border border-black p-1 px-3 text-left text-[11px]">{t.name}</td>
-                        <td className="border border-black p-1 text-center text-[11px]">{t.department}</td>
-                        <td className="border border-black p-1 px-3 text-left text-[10px]">
+                      <tr key={t.id} className="h-10">
+                        <td className="border border-black p-1 text-center text-[10px]">{(pageIdx * pageSize) + idx + 1}</td>
+                        <td className="border border-black p-1 text-center font-mono text-[10px]">{t.id}</td>
+                        <td className="border border-black p-1 px-2 text-left text-[10px]">{t.name}</td>
+                        <td className="border border-black p-1 text-center text-[10px]">{t.department}</td>
+                        <td className="border border-black p-1 px-2 text-left text-[9px]">
                           {t.tClubs.length > 0 ? t.tClubs.map((c: any) => c.name).join(', ') : '-'}
                         </td>
-                        <td className="border border-black p-1 text-center text-[11px] font-bold">{t.tRegTotal}</td>
+                        <td className="border border-black p-1 text-center text-[10px] font-bold">{t.tRegTotal}</td>
                       </tr>
                     ))}
                     {teacherChunk.length < pageSize && Array.from({ length: pageSize - teacherChunk.length }).map((_, i) => (
-                      <tr key={`empty-${i}`} className="h-12">
+                      <tr key={`empty-${i}`} className="h-10">
                         <td className="border border-black p-1">&nbsp;</td>
                         <td className="border border-black p-1">&nbsp;</td>
                         <td className="border border-black p-1">&nbsp;</td>
@@ -515,21 +508,21 @@ const App: React.FC = () => {
                 </table>
 
                 {pageIdx === pageCount - 1 && (
-                  <div className="mt-10 flex justify-around items-end">
+                  <div className="mt-8 flex justify-around items-end pb-4">
                     <div className="text-center">
-                      <div className="mb-5 border-b border-black w-56 mx-auto"></div>
-                      <p className="font-bold text-[11px]">(ลงชื่อ)......................................................</p>
-                      <p className="mt-1 font-medium text-[11px]">หัวหน้ากิจกรรมพัฒนาผู้เรียน</p>
+                      <div className="mb-4 border-b border-black w-48 mx-auto"></div>
+                      <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
+                      <p className="mt-1 font-medium text-[10px]">หัวหน้ากิจกรรมพัฒนาผู้เรียน</p>
                     </div>
                     <div className="text-center">
-                      <div className="mb-5 border-b border-black w-56 mx-auto"></div>
-                      <p className="font-bold text-[11px]">(ลงชื่อ)......................................................</p>
-                      <p className="mt-1 font-medium text-[11px]">ผู้บริหารโรงเรียน</p>
+                      <div className="mb-4 border-b border-black w-48 mx-auto"></div>
+                      <p className="font-bold text-[10px]">(ลงชื่อ)......................................................</p>
+                      <p className="mt-1 font-medium text-[10px]">ผู้บริหารโรงเรียน</p>
                     </div>
                   </div>
                 )}
                 
-                <div className="mt-auto pt-3 text-[8px] text-gray-400 italic text-right">
+                <div className="mt-auto pt-2 text-[7px] text-gray-400 italic text-right">
                   พิมพ์เมื่อ: {new Date().toLocaleDateString('th-TH')} {new Date().toLocaleTimeString('th-TH')}
                 </div>
               </div>
