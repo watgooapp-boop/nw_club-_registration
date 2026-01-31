@@ -36,7 +36,9 @@ import {
   FileUp,
   MapPinned,
   Info,
-  UserPlus
+  UserPlus,
+  Trash2,
+  Pin
 } from 'lucide-react';
 
 import { 
@@ -195,7 +197,7 @@ const App: React.FC = () => {
     
     if (adminFilterClub.trim() !== '') {
       result = result.filter(t => 
-        t.tClubs.some(c => String(c.name).toLowerCase().includes(adminFilterClub.toLowerCase()))
+        t.tClubs.some(c => String(c.name) === adminFilterClub)
       );
     }
     
@@ -326,9 +328,61 @@ const App: React.FC = () => {
     });
   };
 
+  // --- Announcement Logic ---
+  const handleAddAnnouncement = async () => {
+    const { value: formValues } = await Swal.fire({
+      title: 'เพิ่มประกาศใหม่',
+      html: `
+        <div class="text-left space-y-3 p-1">
+          <div><label class="text-[10px] font-black uppercase text-gray-400 block mb-1">หัวข้อประกาศ</label><input id="ann-title" class="w-full border p-3 rounded-xl text-sm shadow-inner" placeholder="ระบุหัวข้อ"></div>
+          <div><label class="text-[10px] font-black uppercase text-gray-400 block mb-1">รายละเอียด</label><textarea id="ann-content" class="w-full border p-3 rounded-xl text-sm h-24" placeholder="ระบุเนื้อหาประกาศ"></textarea></div>
+          <div class="flex items-center gap-2 pt-1"><input type="checkbox" id="ann-pin" class="w-4 h-4 text-blue-600"><label for="ann-pin" class="text-sm font-bold text-gray-600">ปักหมุดประกาศนี้</label></div>
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: 'บันทึกประกาศ',
+      preConfirm: () => {
+        const title = (document.getElementById('ann-title') as HTMLInputElement).value.trim();
+        const content = (document.getElementById('ann-content') as HTMLTextAreaElement).value.trim();
+        if(!title || !content) { Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน'); return false; }
+        return { title, content, isPinned: (document.getElementById('ann-pin') as HTMLInputElement).checked };
+      }
+    });
+    
+    if (formValues) {
+      const newAnn: Announcement = {
+        id: Date.now().toString(),
+        title: formValues.title,
+        content: formValues.content,
+        isPinned: formValues.isPinned,
+        isHidden: false,
+        date: new Date().toISOString()
+      };
+      setAnnouncements(prev => [newAnn, ...prev]);
+      Swal.fire('สำเร็จ', 'เพิ่มประกาศเรียบร้อยแล้ว', 'success');
+    }
+  };
+
+  const deleteAnnouncement = (id: string) => {
+    Swal.fire({
+      title: 'ลบประกาศ?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ'
+    }).then(res => {
+      if (res.isConfirmed) {
+        setAnnouncements(prev => prev.filter(a => a.id !== id));
+        Swal.fire('สำเร็จ', 'ลบประกาศเรียบร้อยแล้ว', 'success');
+      }
+    });
+  };
+
+  const togglePinAnnouncement = (id: string) => {
+    setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, isPinned: !a.isPinned } : a));
+  };
+
+  const toggleHideAnnouncement = (id: string) => {
+    setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, isHidden: !a.isHidden } : a));
+  };
+
   // --- Print Preview Overlay Component ---
   const PrintPreviewOverlay = ({ club, onClose }: { club: Club, onClose: () => void }) => {
-    // กรองและเรียงลำดับข้อมูลให้นิ่งที่สุดก่อนนำไปใช้
     const clubStudents = useMemo(() => students
       .filter(s => String(s.clubId) === String(club.id))
       .sort((a, b) => String(a.level).localeCompare(String(b.level)) || String(a.room).localeCompare(String(b.room)) || parseInt(a.seatNumber) - parseInt(b.seatNumber)),
@@ -565,7 +619,7 @@ const App: React.FC = () => {
                   <h3 className="font-bold flex items-center gap-2">{ann.isPinned && <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded">ปักหมุด</span>}{ann.title}</h3>
                   <span className="text-xs text-gray-400">{new Date(ann.date).toLocaleDateString('th-TH')}</span>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">{ann.content}</p>
+                <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">{ann.content}</p>
               </div>
             ))}
           </div>
@@ -752,6 +806,59 @@ const App: React.FC = () => {
           <StatCard icon={<School className="text-purple-500"/>} title="ชุมนุมทั้งหมด" value={clubs.length} unit="ชุมนุม" />
         </div>
 
+        {/* ระบบจัดการประกาศ */}
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold flex items-center gap-2 text-blue-900"><Megaphone size={22} /> จัดการประกาศ</h3>
+            <button onClick={handleAddAnnouncement} className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md hover:bg-blue-700 transition-all active:scale-95">
+              <PlusCircle size={16} /> เพิ่มประกาศ
+            </button>
+          </div>
+          <div className="overflow-x-auto rounded-xl border border-gray-100">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b">
+                <tr>
+                  <th className="p-4">วันที่</th>
+                  <th className="p-4">หัวข้อประกาศ</th>
+                  <th className="p-4 text-center">สถานะ</th>
+                  <th className="p-4 text-right">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {announcements.length === 0 ? (
+                  <tr><td colSpan={4} className="p-10 text-center text-gray-400 italic">ยังไม่มีประกาศ</td></tr>
+                ) : announcements.map(ann => (
+                  <tr key={ann.id} className="hover:bg-blue-50/20 transition-colors group">
+                    <td className="p-4 text-xs text-gray-400">{new Date(ann.date).toLocaleDateString('th-TH')}</td>
+                    <td className="p-4">
+                      <div className="font-bold text-gray-800 flex items-center gap-2">
+                        {ann.isPinned && <Pin size={12} className="text-red-500" />}
+                        {ann.title}
+                      </div>
+                      <div className="text-[10px] text-gray-400 truncate max-w-md">{ann.content}</div>
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="flex justify-center gap-2">
+                        {ann.isPinned && <span className="bg-red-100 text-red-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">PINNED</span>}
+                        {ann.isHidden && <span className="bg-gray-100 text-gray-400 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">HIDDEN</span>}
+                        {!ann.isPinned && !ann.isHidden && <span className="bg-green-100 text-green-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">ACTIVE</span>}
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex justify-end gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => togglePinAnnouncement(ann.id)} className={`p-2 rounded-lg transition-colors ${ann.isPinned ? 'bg-red-100 text-red-600' : 'bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600'}`} title="ปักหมุด"><Pin size={14}/></button>
+                        <button onClick={() => toggleHideAnnouncement(ann.id)} className={`p-2 rounded-lg transition-colors ${ann.isHidden ? 'bg-gray-200 text-gray-600' : 'bg-gray-50 text-gray-400 hover:bg-blue-50 hover:text-blue-600'}`} title="ซ่อน/แสดง">{ann.isHidden ? <EyeOff size={14}/> : <Eye size={14}/>}</button>
+                        <button onClick={() => deleteAnnouncement(ann.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors" title="ลบ"><Trash2 size={14}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* จัดการข้อมูลครู */}
         <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <h3 className="text-lg font-bold flex items-center gap-2 text-blue-900"><UserPen size={22} /> จัดการข้อมูลครู</h3>
@@ -769,13 +876,14 @@ const App: React.FC = () => {
               </div>
               <div className="flex bg-gray-50 border rounded-xl overflow-hidden shadow-inner flex-1 md:flex-none h-10">
                 <span className="bg-gray-100 p-2.5 text-gray-400 border-r flex items-center"><Search size={16} /></span>
-                <input 
-                  type="text" 
-                  placeholder="ค้นหาชื่อชุมนุมที่ดูแล..." 
-                  className="bg-transparent text-xs px-3 py-1 outline-none w-full text-gray-600"
+                <select 
+                  className="bg-transparent text-xs px-3 py-1 outline-none w-full text-gray-600 font-bold"
                   value={adminFilterClub}
                   onChange={(e) => setAdminFilterClub(e.target.value)}
-                />
+                >
+                  <option value="">ค้นหาตามชุมนุม...</option>
+                  {clubs.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                </select>
               </div>
               <button onClick={handleRegisterTeacherModal} className="bg-green-600 text-white px-4 h-10 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md hover:bg-green-700 transition-all active:scale-95">
                 <PlusCircle size={16} /> เพิ่มครู
@@ -786,7 +894,7 @@ const App: React.FC = () => {
             </div>
           </div>
           
-          <div className="overflow-x-auto rounded-xl border border-gray-100">
+          <div className="overflow-x-auto rounded-xl border border-gray-100 shadow-inner">
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b">
                 <tr>
@@ -833,7 +941,7 @@ const App: React.FC = () => {
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => handleEditTeacherModal(t)} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors" title="แก้ไข"><Pencil size={16}/></button>
-                        <button onClick={() => handleDeleteTeacher(t.id)} className="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors" title="ลบ"><XCircle size={16}/></button>
+                        <button onClick={() => handleDeleteTeacher(t.id)} className="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors" title="ลบ"><Trash2 size={16}/></button>
                       </div>
                     </td>
                   </tr>
@@ -1208,7 +1316,7 @@ const ClubManagementCard = ({ club, students, teachers, isLeadAdvisor, onUpdate,
         <div className="flex gap-2">
           {isLeadAdvisor && (
             <>
-              <button onClick={() => onUpdate(club)} className="bg-white border text-gray-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-gray-50 transition-colors">ตั้งค่าชุมนุม</button>
+              <button onClick={() => onUpdate(club)} className="bg-white border text-gray-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-gray-100 transition-colors">ตั้งค่าชุมนุม</button>
               <button onClick={onDelete} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors">ลบข้อมูล</button>
             </>
           )}
