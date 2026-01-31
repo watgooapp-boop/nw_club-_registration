@@ -432,7 +432,7 @@ const App: React.FC = () => {
 
   // --- Teacher Print Preview Overlay Component ---
   const TeacherPrintPreviewOverlay = ({ teachersList, onClose }: { teachersList: any[], onClose: () => void }) => {
-    const pageSize = 20; // ปรับกลับเป็น 20 ตามที่ผู้ใช้ต้องการ
+    const pageSize = 18; // ลดลงเพื่อให้เหลือที่สำหรับส่วนลงชื่อ
     const pageCount = Math.max(1, Math.ceil(teachersList.length / pageSize));
     const pages = Array.from({ length: pageCount }, (_, i) => teachersList.slice(i * pageSize, (i + 1) * pageSize));
 
@@ -550,7 +550,7 @@ const App: React.FC = () => {
       pending: clubStudents.filter(s => s.grade === null).length
     };
 
-    const pageSize = 25; // ปรับกลับเป็น 25 ตามเดิม
+    const pageSize = 20; // ลดลงเพื่อให้เหลือที่สำหรับส่วนสรุปและส่วนลงชื่อ
     const pageCount = Math.max(1, Math.ceil(clubStudents.length / pageSize));
     const pages = Array.from({ length: pageCount }, (_, i) => clubStudents.slice(i * pageSize, (i + 1) * pageSize));
 
@@ -1315,29 +1315,19 @@ const App: React.FC = () => {
           border-radius: 4px;
         }
 
-        /* Improved Surgical Print Styles */
+        /* Improved Print Styles */
         @media print {
-          /* ซ่อนทุกอย่างยกเว้นส่วนที่จะพิมพ์ */
-          body * {
-            visibility: hidden !important;
-          }
-          #print-content, #print-content * {
-            visibility: visible !important;
-          }
-          #print-content {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-
           @page { 
             size: A4; 
             margin: 10mm; 
           }
           
+          body > #root > header,
+          body > #root > main,
+          body > #root > footer {
+            display: none !important;
+          }
+
           body {
             background: white !important;
             margin: 0 !important;
@@ -1345,27 +1335,52 @@ const App: React.FC = () => {
             overflow: visible !important;
           }
 
+          #root {
+            height: auto !important;
+            overflow: visible !important;
+          }
+
+          .no-print-backdrop {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            background: white !important;
+            display: block !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+            backdrop-filter: none !important;
+            z-index: 10000 !important;
+            visibility: visible !important;
+          }
+
+          #print-content {
+            display: block !important;
+            width: 100% !important;
+            background: white !important;
+            visibility: visible !important;
+          }
+
           .a4-page {
-            width: 210mm !important;
-            height: 297mm !important;
-            min-height: 297mm !important;
-            padding: 5mm !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            padding: 0 !important;
             margin: 0 !important;
             box-shadow: none !important;
             border: none !important;
             box-sizing: border-box !important;
-            display: flex !important;
-            flex-direction: column !important;
+            display: block !important;
             position: relative !important;
-            overflow: hidden !important;
-            page-break-after: always !important;
+            visibility: visible !important;
             break-after: page !important;
+            page-break-after: always !important;
           }
 
-          /* หน้าสุดท้ายห้ามขึ้นหน้าเปล่า */
           .a4-page:last-child {
-            page-break-after: auto !important;
             break-after: auto !important;
+            page-break-after: auto !important;
           }
 
           * {
@@ -1376,6 +1391,7 @@ const App: React.FC = () => {
 
           table, th, td {
             border-color: black !important;
+            visibility: visible !important;
           }
         }
 
