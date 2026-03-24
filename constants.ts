@@ -12,7 +12,7 @@ export const DEPARTMENTS = [
 
 export const ROOMS = Array.from({ length: 13 }, (_, i) => (i + 1).toString());
 
-export const SCHOOL_LOGO = 'https://img5.pic.in.th/file/secure-sv1/nw_logo-removebg.png';
+export const SCHOOL_LOGO = 'https://s.imgz.io/2026/03/23/logo_school-removebg692d30e639191ff8.png';
 export const ADMIN_PASSWORD = 'admin1234';
 
 export const INITIAL_ANNOUNCEMENTS = [
